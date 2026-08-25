@@ -1,0 +1,734 @@
+{stats.bra
+𝕌𝕋𝔽-𝟠
+
+Read all OpenPose json files and create single tab separated file for pose_keypoints_2d for single person}
+
+X=
+  (date=20220916)
+  (keypoints=OpenPoseKeypoints)
+  (windowSizes=9 9 9)
+  (inputroot=FinalDataset)
+  ( fixed
+  =   a b m n k x y zs
+    .     @(!arg:?a "/" [?m ?b [?n)
+        & !m+-1*!n:?k
+        & (   @(!a:?x [!k ?y)
+            & str$((!x:~|0) "." !y)
+          |   0:?zs
+            &   whl
+              ' ( !k+1:?k
+                & @(!a:~(? [!k ?))
+                & 0 !zs:?zs
+                )
+            & str$("0." !zs !a)
+          )
+      | !arg
+  )
+  ( mkdir
+  =   
+    .   sys
+      $ ( str
+        $ ( "mkdir "
+            (!OS:Windows&|"-p ")
+            !arg
+          )
+        )
+  )
+  ( rmdir
+  =   
+    .   
+      &     str
+          $ ( ( !OS:Windows&"del /S /Q "
+              | "rm -rf "
+              )
+              !arg
+              ( !OS:Windows&" >nul 2>&1"
+              | " >/dev/null 2>&1"
+              )
+            )
+        : ?command
+      & Sys$!command
+      & Sys$(str$("rmdir " !arg))
+  )
+  ( exists
+  =   
+    .     sys
+        $ ( str
+          $ ( ( !OS:Windows&"dir "
+              | "ls "
+              )
+              !arg
+            )
+          )
+      : 0
+  )
+  ( getOpenPoseOutputFolderList
+  =   inputroot folders keypoints
+    .   !arg:(?inputroot.?folders.?keypoints)
+      &     str
+          $ ( ( !OS:Windows&"dir /AD /B "
+              | "ls -d -1 "
+              )
+              !inputroot
+              !sep
+              !folders
+              !sep
+              !keypoints
+              (!OS:Windows&|"/*/")
+              " > folders 2>/dev/null"
+            )
+        : ?command
+      & sys$!command
+      & "folders == 20220916-SP01F_keypoints
+	        20220916-SP03M_keypoints
+	        20220916-SP04F_keypoints
+	        20220916-SP05F_keypoints
+	        20220916-SP07F_keypoints
+        "
+      &     vap
+          $ ( ( 
+              =   
+                .   (@(!arg:?arg \r)|)
+                  & ( !arg:
+                    | @( !arg
+                       :   !inputroot
+                           !sep
+                           !folders
+                           !sep
+                           !keypoints
+                           !sep
+                           ?
+                       )
+                    |   str
+                      $ ( !inputroot
+                          !sep
+                          !folders
+                          !sep
+                          !keypoints
+                          !sep
+                          !arg
+                        )
+                    )
+              )
+            . get$(folders,STR)
+            . \n
+            )
+        : ?folders
+      & rmv$folders
+      & !folders
+  )
+  ( createOpenPoseOutputSingleFile
+  =   folder MaX NN
+    .   !arg:(?folder.?outputtab)
+      &     str
+          $ ( ( !OS:Windows&"dir /B /ON "
+              | "ls -1 "
+              )
+              \"
+              !folder
+              "\" > dir.txt"
+            )
+        : ?command
+      & sys$!command
+      & get$("dir.txt",STR):?dir
+      & rmv$"dir.txt"
+      & put$(!header,!outputtab,NEW,BIN)
+      & -1:?NN
+      &     vap
+          $ ( ( 
+              =   a b
+                .     (@(!arg:?arg \r)|)
+                    & @(!arg:? ".json")
+                    & (   (   mod$(!NN,1000):0
+                            & put$(str$(!NN \r))
+                          | 
+                          )
+                        & str$(!folder !sep !arg):?file
+                        & get$(!file,JSN):?json
+                        & 1+!NN:?NN
+                        &   !NN
+                            (     !json
+                                : (   ?
+                                    + ( people
+                                      .   
+                                        ,   ?
+                                          + ("pose_keypoints_2d".,?nums)
+                                          + ?
+                                        , 
+                                      )
+                                    + ?
+                                  , 
+                                  )
+                              &     map
+                                  $ ( ( 
+                                      = .\t (its.fixed)$!arg
+                                      )
+                                    . !nums
+                                    )
+                                  \n
+                            | !empty
+                            )
+                      | 
+                      )
+                  | 
+              )
+            . !dir
+            . \n
+            )
+        : ?L
+      & put$(str$!L,!outputtab,APP,BIN)
+  )
+  ( zipList
+  =   session zipfile
+    .   "Assumes that listing of zip file lists as follows: session/speakerfolder/json-files"
+      & !arg:?session
+      &     str
+          $ ( (   !OS:Windows
+                &   "tar -tf "
+                      str
+                    $ ( !(its.inputroot)
+                        !sep
+                        !session
+                        !sep
+                        !(its.keypoints)
+                        !sep
+                        !session
+                        ".zip"
+                      )
+              |   "
+	    Archive:  FinalDataset/20220916/OpenPoseKeypoints/20220916.zip
+	      Length      Date    Time    Name
+	    ---------  ---------- -----   ----
+		0  2023-03-17 15:59   20220916/
+		0  2023-02-25 12:57   20220916/20220916-SP01F_keypoints/
+		0  2023-06-04 15:38   20220916/20220916-SP03M_keypoints/
+		0  2023-03-17 15:59   20220916/20220916-SP04F_keypoints/
+		0  2023-03-17 15:59   20220916/20220916-SP05F_keypoints/
+		0  2023-03-17 15:59   20220916/20220916-SP07F_keypoints/
+	    ---------                     -------
+		0                     6 files
+	    "
+                &   "unzip -l "
+                      str
+                    $ ( !(its.inputroot)
+                        !sep
+                        !session
+                        !sep
+                        !(its.keypoints)
+                        !sep
+                        !session
+                        ".zip"
+                        " \"*/\" "
+                      )
+              )
+              " > zips"
+            )
+        : ?command
+      & Sys$!command
+      &     
+          ' @( !arg
+             :   %
+                 "/"
+                 ()$session
+                 "-"
+                 ?folder
+                 "_keypoints"
+                 "/"
+                 ?
+             )
+        : (=?match)
+      &     mop
+          $ ( (=.!arg:?*%@?arg&!arg)
+            .   mop
+              $ ( 
+                .   vap
+                  $ ( ( 
+                      =   
+                        .     !match
+                            &     str
+                                $ (!session "-" !folder "_keypoints")
+                              : ?folder
+                            & !folder
+                          | 
+                      )
+                    . get$(zips,STR)
+                    . \n
+                    )
+                . (=a a)
+                . (=+)
+                )
+            . (=+)
+            . (=a a)
+            )
+        : ?folders
+      & rmv$zips
+      &   map
+        $ ( ( 
+            =   
+              .   str
+                $ ( !(its.inputroot)
+                    !sep
+                    !date
+                    !sep
+                    !(its.keypoints)
+                    !sep
+                    !arg
+                  )
+            )
+          . !folders
+          )
+  )
+  ( unzip
+  =   session zipfile folder folders
+    .   "Assumes that listing of zip file lists as follows: session/speakerfolder/json-files
+         The unzipped files are not local to the zip file, but local to the CWD."
+      & !arg:?session
+      &     str
+          $ ( !(its.inputroot)
+              !sep
+              !session
+              !sep
+              !(its.keypoints)
+              !sep
+              !session
+              ".zip"
+            )
+        : ?zipfile
+      &   ( !OS:Windows&
+          |   str
+            $ ( !(its.inputroot)
+                !sep
+                !session
+                !sep
+                !(its.keypoints)
+                !sep
+              )
+          )
+        : ?extractionfolder
+      & "Delete any preexisting destination folder."
+      & str$(!extractionfolder !session):?speakerDataFolder
+      & (   (its.exists)$!speakerDataFolder
+          & (its.rmdir)$!speakerDataFolder
+        | 
+        )
+      &     str
+          $ ( ( !OS:Windows&"tar -xf "
+              | "unzip -qq -d " !extractionfolder " "
+              )
+              !zipfile
+            )
+        : ?command
+      & Sys$!command
+      &   out
+        $ (str$("Going to list directories in folder " !speakerDataFolder))
+      &     str
+          $ ( ( !OS:Windows&"dir /AD /B "
+              | "ls -1 -d "
+              )
+              !speakerDataFolder
+              (!OS:Windows&|"/*/")
+              " > zips"
+            )
+        : ?command
+      & Sys$!command
+      &     vap
+          $ ( ( 
+              =   
+                .   (@(!arg:?arg \r)|)
+                  & ( !arg:
+                    |   @( !arg
+                         :   (|% !sep)
+                             ( !session "-" ? "_keypoints"
+                             : ?folder
+                             )
+                             ?
+                         )
+                      & !folder
+                    | 
+                    )
+              )
+            . get$(zips,STR)
+            . \n
+            )
+        : ?folders
+      & rmv$zips
+      &   map
+        $ ( ( 
+            =   from to
+              .   str$(!speakerDataFolder !sep !arg):?from
+                &     str
+                    $ ( !(its.inputroot)
+                        !sep
+                        !session
+                        !sep
+                        !(its.keypoints)
+                        !sep
+                        !arg
+                      )
+                  : ?to
+                & ren$(!from.!to)
+            )
+          . !folders
+          )
+      & "Delete destination folder, including any files left behind."
+      & (its.rmdir)$!speakerDataFolder
+      &   map
+        $ ( ( 
+            =   
+              .   str
+                $ ( !(its.inputroot)
+                    !sep
+                    !date
+                    !sep
+                    !(its.keypoints)
+                    !sep
+                    !arg
+                  )
+            )
+          . !folders
+          )
+  )
+  (deleteUnzippedKeypointJSONfiles=.(its.rmdir)$!arg)
+  ( doit
+  =   
+    .   !arg:(?inputroot.?date.?keypoints.?windowSizes)
+      &     (its.getOpenPoseOutputFolderList)
+          $ (!inputroot.!date.!keypoints)
+        : ?folders
+        : ?existingFolders
+      & (   !folders:
+          & (its.zipList)$!date:?folders
+        | 
+        )
+      & (   !folders:
+          &   out
+            $ ( str
+              $ ("No zipfile with OpenPose data found for session " !date)
+              )
+        |   map
+          $ ( ( 
+              =   date
+                .   "e.g., arg == FinalDataset\\20220916\\OpenPoseKeypoints\\20220916-SP01F_keypoints"
+                  &   !arg
+                    : @( ?folder
+                       : ? !sep ?date !sep ? !sep ?output
+                       )
+                  & "e.g., output == 20220916-SP01F_keypoints"
+                  &   str$(vaj !sep !date !"-windows")
+                    : ?vajfolder
+                  & (its.mkdir)$!vajfolder
+                  &     str
+                      $ (!vajfolder !sep !output !"-windows" ".vaj.tab")
+                    : ?outputvaj
+                  & "e.g., outputvaj == vaj/20220916-9-9-9.vaj/20220916-SP01F_keypoints-9-9-9.vaj.tab"
+                  & (   (its.exists)$!outputvaj
+                      & out$(str$(!outputvaj " already exists"))
+                    |     str$(keypoints !sep !date !"-windows")
+                        : ?tabfolder
+                      & (   (its.exists)$!tabfolder
+                          & out$(str$(!tabfolder " already exists"))
+                        | (its.mkdir)$!tabfolder
+                        )
+                      &   str$(!tabfolder !sep !output ".tab")
+                        : ?outputtab
+                      & ( (its.exists)$!outputtab
+                        |     out
+                            $ ( str
+                              $ ( "Going to read all JSON files and to combine them all in a single file called "
+                                  !outputtab
+                                )
+                              )
+                          & (   !existingFolders:
+                              &   (its.unzip)$!date
+                                : ?existingFolders
+                            | 
+                            )
+                          &   (its.createOpenPoseOutputSingleFile)
+                            $ (!folder.!outputtab)
+                          & (its.deleteUnzippedKeypointJSONfiles)$!arg
+                        )
+                      & (   (its.exists)$!outputtab
+                          &     str
+                              $ ( ( !OS:Windows&
+                                  | src !sep jerk !sep
+                                  )
+                                  "jerk "
+                                  !outputtab
+                                  " "
+                                  !outputvaj
+                                  !windowSizesSpaced
+                                  " middle Nose Neck RShoulder RElbow RWrist LShoulder LElbow LWrist MidHip RHip RKnee RAnkle LHip LKnee LAnkle REye LEye REar LEar LBigToe LSmallToe LHeel RBigToe RSmallToe RHeel"
+                                )
+                            : ?command
+                          & ( Sys$!command:0
+                            | out$(str$("Command failed: " !command))
+                            )
+                        |   out
+                          $ "Could not create input for program that computes velocity, acceleration and jerk."
+                        )
+                    )
+              )
+            . !folders
+            )
+        )
+  )
+  ( globals
+  =   (Sys=.sys$!arg)
+    &   map$((=." " !arg).!(its.windowSizes))
+      : ?windowSizesSpaced
+    & "e.g., windowSizesSpaced == \" \" 9 \" \" 9 \" \" 9"
+    &     str
+        $ (map$((=."-" !arg).!(its.windowSizes)))
+      : ?"-windows"
+    &     str
+        $ ( \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \t
+            "-"
+            \n
+          )
+      : ?empty
+    &     str
+        $ ( Frame
+            \t
+            Nose
+            \t\t\t
+            Neck
+            \t\t\t
+            RShoulder
+            \t\t\t
+            RElbow
+            \t\t\t
+            RWrist
+            \t\t\t
+            LShoulder
+            \t\t\t
+            LElbow
+            \t\t\t
+            LWrist
+            \t\t\t
+            MidHip
+            \t\t\t
+            RHip
+            \t\t\t
+            RKnee
+            \t\t\t
+            RAnkle
+            \t\t\t
+            LHip
+            \t\t\t
+            LKnee
+            \t\t\t
+            LAnkle
+            \t\t\t
+            REye
+            \t\t\t
+            LEye
+            \t\t\t
+            REar
+            \t\t\t
+            LEar
+            \t\t\t
+            LBigToe
+            \t\t\t
+            LSmallToe
+            \t\t\t
+            LHeel
+            \t\t\t
+            RBigToe
+            \t\t\t
+            RSmallToe
+            \t\t\t
+            RHeel
+            \t\t\n
+          )
+      : ?header
+  )
+  ( new
+  =   
+    .   ~
+      |     (   @(!v:? Windows ?)
+              & ("\\".Windows)
+            | ("/".Unix)
+            )
+          : (?sep.?OS)
+        & !(its.globals)
+        & -1*clk$:?t0
+        &   (its.doit)
+          $ ( !(its.inputroot)
+            . !(its.date)
+            . !(its.keypoints)
+            . !(its.windowSizes)
+            )
+        & clk$:?t1
+        & out$(str$(flt$(!t1+!t0,3) " s"))
+  );
+
+r=
+  get'("stats.bra",TXT)
+& rmv$(str$(stats ".bak"))
+& ren$("stats.bra".str$(stats ".bak"))
+&   put
+  $ ( "{stats.bra
+𝕌𝕋𝔽-𝟠
+
+Read all OpenPose json files and create single tab separated file for pose_keypoints_2d for single person}
+
+"
+    , "stats.bra"
+    , NEW
+    , BIN
+    )
+& lst'(X,"stats.bra",APP,BIN)
+& put'(\n,"stats.bra",APP,BIN)
+& lst'(r,"stats.bra",APP,BIN)
+& put$(str$("\nnew'" X ";\n"),"stats.bra",APP,BIN)
+& ;
+
+new'X;
