@@ -1,0 +1,208 @@
+{jerk.bra
+𝕌𝕋𝔽-𝟠
+
+Read all OpenPose data that already is converted from json files (one json file per frame)
+to tab separated files (one tab separated file per movie).
+Create a single tab separated file containing the original OpenPose data and
+additional data for velocity 'v', acceleration 'a', and jerk 'j'.}
+
+X=
+  (meetings=20220916)
+  (windowSizes=7 7 7)
+  ( fixed
+  =   a b m n k x y zs
+    .     @(!arg:?a "/" [?m ?b [?n)
+        & !m+-1*!n:?k
+        & (   @(!a:?x [!k ?y)
+            & str$((!x:~|0) "." !y)
+          |   0:?zs
+            &   whl
+              ' ( !k+1:?k
+                & @(!a:~(? [!k ?))
+                & 0 !zs:?zs
+                )
+            & str$("0." !zs !a)
+          )
+      | !arg
+  )
+  ( winsep
+  =   a b
+    .       map
+          $ ( ( 
+              =   
+                .     whl
+                    ' ( @(!arg:?a "/" ?b)
+                      & str$(!a "\\" !b):?arg
+                      )
+                  & "\\" !arg
+              )
+            . !arg
+            )
+        : "\\" ?arg
+      & str$!arg
+  )
+  ( direxists
+  =   dirtxt
+    .   str$("dir /AD /B " !arg " > dirtxt"):?command
+      & sys$!command:0
+      & get$(dirtxt,STR):?dirtxt
+      & @(!dirtxt:~(? "File Not Found" ?))
+  )
+  ( ensuredirexists
+  =   dirtxt
+    .   (its.direxists)$!arg
+      |   out$("jerk.bra: folder" !arg "will be created")
+        & sys$(str$("mkdir " !arg))
+  )
+  ( findKeyPointsFolderTAB
+  =   dirtxt foldr
+    .   (its.direxists)$"keypoints.tab"
+      &   map
+        $ ( ( 
+            =   meeting
+              .   !arg:?meeting
+                &     str
+                    $ ("dir /B /ON keypoints.tab\\" !meeting " > dirtxt")
+                  : ?command
+                & sys$!command
+                & ( !meeting
+                  .   vap
+                    $ ( ( 
+                        =   
+                          .   (@(!arg:?arg \r)|)
+                            & !arg
+                        )
+                      . get$(dirtxt,STR)
+                      . \n
+                      )
+                  )
+            )
+          . !arg
+          )
+  )
+  ( doit
+  =   
+    .   !arg:(?meetings.?windowSizes)
+      & out$("jerk.bra: meetings" !meetings)
+      &   (its.findKeyPointsFolderTAB)$!meetings
+        : ?keypointfolders
+      & out$("jerk.bra: keypointfolders" !keypointfolders)
+      &   map$((=." " !arg).!windowSizes)
+        : ?windowSizes
+      & out$("jerk.bra: windowSizes" !windowSizes)
+      &   map
+        $ ( ( 
+            =   yyyymmdd speakerKeyPointFiles
+              .   !arg:(?yyyymmdd.?speakerKeyPointFiles)
+                &   map
+                  $ ( ( 
+                      =     keypointfolder
+                            tuptuo
+                            output
+                            vajfolder
+                            keypointsfolder
+                            outputkeypoints
+                        .   !arg:?keypointfolder
+                          &   (   @( rev$!keypointfolder
+                                   : ?tuptuo ("\\"|"/") ?
+                                   )
+                                & rev$!tuptuo
+                              | !keypointfolder
+                              )
+                            : ?output
+                          & ( @(!output:?output "." ?)
+                            | 
+                            )
+                          &     map
+                              $ ( ( 
+                                  = .!arg:~" "|"-"
+                                  )
+                                . !windowSizes
+                                )
+                            : ?windows
+                          &     str
+                              $ ("vaj\\" !yyyymmdd !windows "\\")
+                            : ?vajfolder
+                          & (its.ensuredirexists)$!vajfolder
+                          &   str$("keypoints.tab\\" !yyyymmdd "\\")
+                            : ?keypointsfolder
+                          & (its.ensuredirexists)$!keypointsfolder
+                          &     str
+                              $ (!vajfolder !output !windows ".vaj.tab")
+                            : ?outputvaj
+                          &   str$(!keypointsfolder !output ".tab")
+                            : ?outputkeypoints
+                          &     str
+                              $ ( "jerk "
+                                  !outputkeypoints
+                                  " "
+                                  !outputvaj
+                                  !windowSizes
+                                  " middle Nose Neck RShoulder RElbow RWrist LShoulder LElbow LWrist MidHip RHip RKnee RAnkle LHip LKnee LAnkle REye LEye REar LEar LBigToe LSmallToe LHeel RBigToe RSmallToe RHeel"
+                                )
+                            : ?command
+                          & out$("jerk.bra: " !command)
+                          & sys$!command
+                          &   out
+                            $ (str$("jerk.bra: " !outputvaj " written"))
+                          & ( 
+                            | sys$(str$("del /Q " !arg "\\*"))
+                            )
+                      )
+                    . !speakerKeyPointFiles
+                    )
+            )
+          . !keypointfolders
+          )
+  )
+  ( new
+  =     X r v a j t0 t1
+      , vaj yyyymmdd windowSizes
+    .   ~
+      |   out$"jerk.bra"
+        & (   arg$:?yyyymmdd
+            & arg$:?vaj
+            & @( !vaj
+               :   (#>0:?v)
+                   "-"
+                   (#>0:?a)
+                   "-"
+                   (#>0:?j)
+               )
+            & !v !a !j:?windowSizes
+            & !yyyymmdd:?(its.meetings)
+            & !windowSizes:?(its.windowSizes)
+          | 
+          )
+        & -1*clk$:?t0
+        &   (its.doit)
+          $ (!(its.meetings).!(its.windowSizes))
+        & clk$:?t1
+        & out$(str$(flt$(!t1+!t0,3) " s"))
+  );
+
+r=
+  get'("jerk.bra",TXT)
+& rmv$(str$(jerk ".bak"))
+& ren$("jerk.bra".str$(jerk ".bak"))
+&   put
+  $ ( "{jerk.bra
+𝕌𝕋𝔽-𝟠
+
+Read all OpenPose data that already is converted from json files (one json file per frame)
+to tab separated files (one tab separated file per movie).
+Create a single tab separated file containing the original OpenPose data and
+additional data for velocity 'v', acceleration 'a', and jerk 'j'.}
+
+"
+    , "jerk.bra"
+    , NEW
+    , BIN
+    )
+& lst'(X,"jerk.bra",APP)
+& put'(\n,"jerk.bra",APP,BIN)
+& lst'(r,"jerk.bra",APP)
+& put$(str$("\nnew'" X ";\n"),"jerk.bra",APP,BIN)
+& ;
+
+new'X;

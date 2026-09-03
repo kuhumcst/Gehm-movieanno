@@ -1,13 +1,16 @@
-{stats.bra
+{OpenPose2VAJ.bra
 𝕌𝕋𝔽-𝟠
 
 Read all OpenPose json files and create single tab separated file for pose_keypoints_2d for single person}
 
-X=
-  (date=20220916)
+OpenPose2VAJ=
+  (root=)
+  (inputroot=FinalDataset)
+  (tab=keypoints)
+  (derivatives=vaj)
+  (sessionID=20220916)
   (keypoints=OpenPoseKeypoints)
   (windowSizes=9 9 9)
-  (inputroot=FinalDataset)
   ( fixed
   =   a b m n k x y zs
     .     @(!arg:?a "/" [?m ?b [?n)
@@ -31,6 +34,9 @@ X=
         $ ( "mkdir "
             (!OS:Windows&|"-p ")
             !arg
+            ( !OS:Windows&" >nul 2>&1"
+            | " >/dev/null 2>&1"
+            )
           )
         )
   )
@@ -48,7 +54,15 @@ X=
             )
         : ?command
       & Sys$!command
-      & Sys$(str$("rmdir " !arg))
+      &   Sys
+        $ ( str
+          $ ( "rmdir "
+              !arg
+              ( !OS:Windows&" >nul 2>&1"
+              | " >/dev/null 2>&1"
+              )
+            )
+          )
   )
   ( exists
   =   
@@ -58,26 +72,34 @@ X=
               | "ls "
               )
               !arg
+              ( !OS:Windows&" >nul 2>&1"
+              | " >/dev/null 2>&1"
+              )
             )
           )
       : 0
   )
   ( getOpenPoseOutputFolderList
-  =   inputroot folders keypoints
-    .   !arg:(?inputroot.?folders.?keypoints)
+  =   root inputroot folders keypoints date
+    .   !arg:(?root.?inputroot.?date.?keypoints)
       &     str
           $ ( ( !OS:Windows&"dir /AD /B "
               | "ls -d -1 "
               )
+              !root
               !inputroot
               !sep
-              !folders
+              !date
               !sep
               !keypoints
               (!OS:Windows&|"/*/")
-              " > folders 2>/dev/null"
+              " >folders"
+              ( !OS:Windows&" 2>nul"
+              | " 2>/dev/null"
+              )
             )
         : ?command
+      & out$(str$("command: " !command))
       & sys$!command
       & "folders == 20220916-SP01F_keypoints
 	        20220916-SP03M_keypoints
@@ -91,18 +113,20 @@ X=
                 .   (@(!arg:?arg \r)|)
                   & ( !arg:
                     | @( !arg
-                       :   !inputroot
+                       :   !root
+                           !inputroot
                            !sep
-                           !folders
+                           !date
                            !sep
                            !keypoints
                            !sep
                            ?
                        )
                     |   str
-                      $ ( !inputroot
+                      $ ( !root
+                          !inputroot
                           !sep
-                          !folders
+                          !date
                           !sep
                           !keypoints
                           !sep
@@ -114,6 +138,7 @@ X=
             . \n
             )
         : ?folders
+      & out$(str$("folders:" !folders))
       & rmv$folders
       & !folders
   )
@@ -126,7 +151,10 @@ X=
               )
               \"
               !folder
-              "\" > dir.txt"
+              "\" >dir.txt"
+              ( !OS:Windows&" 2>nul"
+              | " 2>/dev/null"
+              )
             )
         : ?command
       & sys$!command
@@ -186,7 +214,8 @@ X=
           $ ( (   !OS:Windows
                 &   "tar -tf "
                       str
-                    $ ( !(its.inputroot)
+                    $ ( !(its.root)
+                        !(its.inputroot)
                         !sep
                         !session
                         !sep
@@ -210,7 +239,8 @@ X=
 	    "
                 &   "unzip -l "
                       str
-                    $ ( !(its.inputroot)
+                    $ ( !(its.root)
+                        !(its.inputroot)
                         !sep
                         !session
                         !sep
@@ -222,8 +252,12 @@ X=
                       )
               )
               " > zips"
+              ( !OS:Windows&" 2>nul"
+              | " 2>/dev/null"
+              )
             )
         : ?command
+      & out$(str$("zipList: " !command))
       & Sys$!command
       &     
           ' @( !arg
@@ -266,7 +300,8 @@ X=
         $ ( ( 
             =   
               .   str
-                $ ( !(its.inputroot)
+                $ ( !(its.root)
+                    !(its.inputroot)
                     !sep
                     !date
                     !sep
@@ -284,7 +319,8 @@ X=
          The unzipped files are not local to the zip file, but local to the CWD."
       & !arg:?session
       &     str
-          $ ( !(its.inputroot)
+          $ ( !(its.root)
+              !(its.inputroot)
               !sep
               !session
               !sep
@@ -296,7 +332,8 @@ X=
         : ?zipfile
       &   ( !OS:Windows&
           |   str
-            $ ( !(its.inputroot)
+            $ ( !(its.root)
+                !(its.inputroot)
                 !sep
                 !session
                 !sep
@@ -316,6 +353,9 @@ X=
               | "unzip -qq -d " !extractionfolder " "
               )
               !zipfile
+              ( !OS:Windows&" >nul 2>&1"
+              | " >/dev/null 2>&1"
+              )
             )
         : ?command
       & Sys$!command
@@ -328,6 +368,9 @@ X=
               !speakerDataFolder
               (!OS:Windows&|"/*/")
               " > zips"
+              ( !OS:Windows&" 2>nul"
+              | " 2>/dev/null"
+              )
             )
         : ?command
       & Sys$!command
@@ -357,7 +400,8 @@ X=
             =   from to
               .   str$(!speakerDataFolder !sep !arg):?from
                 &     str
-                    $ ( !(its.inputroot)
+                    $ ( !(its.root)
+                        !(its.inputroot)
                         !sep
                         !session
                         !sep
@@ -376,7 +420,8 @@ X=
         $ ( ( 
             =   
               .   str
-                $ ( !(its.inputroot)
+                $ ( !(its.root)
+                    !(its.inputroot)
                     !sep
                     !date
                     !sep
@@ -391,9 +436,50 @@ X=
   (deleteUnzippedKeypointJSONfiles=.(its.rmdir)$!arg)
   ( doit
   =   
-    .   !arg:(?inputroot.?date.?keypoints.?windowSizes)
+    .     !arg
+        : ( ?root
+          . ?inputroot
+          . ?tab
+          . ?derivatives
+          . ?date
+          . ?keypoints
+          . ?windowSizes
+          )
+      &   !arg
+        : ( ?(its.root)
+          . ?(its.inputroot)
+          . ?(its.tab)
+          . ?(its.derivatives)
+          . ?(its.sessionID)
+          . ?(its.keypoints)
+          . ?(its.windowSizes)
+          )
+      &   (   @(!v:? Windows ?)
+            & ("\\".Windows)
+          | ("/".Unix)
+          )
+        : (?sep.?OS)
+      & !(its.globals)
+      &   out
+        $ ( str
+          $ ( "OpenPose2VAJ root:"
+              !root
+              " inputroot:"
+              !inputroot
+              " tab:"
+              !tab
+              " derivatives:"
+              !derivatives
+              " session:"
+              !date
+              " keypoints:"
+              !keypoints
+              " windowSizes:"
+              !windowSizes
+            )
+          )
       &     (its.getOpenPoseOutputFolderList)
-          $ (!inputroot.!date.!keypoints)
+          $ (!root.!inputroot.!date.!keypoints)
         : ?folders
         : ?existingFolders
       & (   !folders:
@@ -413,8 +499,16 @@ X=
                     : @( ?folder
                        : ? !sep ?date !sep ? !sep ?output
                        )
+	      & vap$(.!arg.!sep):? @%?date  %@ @%?output
+	      & out$(date !date output !output)
                   & "e.g., output == 20220916-SP01F_keypoints"
-                  &   str$(vaj !sep !date !"-windows")
+                  &     str
+                      $ ( !(its.root)
+                          !(its.derivatives)
+                          !sep
+                          !date
+                          !"-windows"
+                        )
                     : ?vajfolder
                   & (its.mkdir)$!vajfolder
                   &     str
@@ -423,7 +517,12 @@ X=
                   & "e.g., outputvaj == vaj/20220916-9-9-9.vaj/20220916-SP01F_keypoints-9-9-9.vaj.tab"
                   & (   (its.exists)$!outputvaj
                       & out$(str$(!outputvaj " already exists"))
-                    |     str$(keypoints !sep !date !"-windows")
+                    |       str
+                          $ ( !(its.root)
+                              !(its.tab)
+                              !sep
+                              !date
+                            )
                         : ?tabfolder
                       & (   (its.exists)$!tabfolder
                           & out$(str$(!tabfolder " already exists"))
@@ -691,44 +790,119 @@ X=
       : ?header
   )
   ( new
-  =   
-    .   ~
-      |     (   @(!v:? Windows ?)
-              & ("\\".Windows)
-            | ("/".Unix)
+  =   OpenPose2VAJ r
+    .   
+      |     whl
+          ' @( arg$
+             : (   ?
+                   root
+                   ("="|":"|" ")
+                   ?root
+               |   ?
+                   inputroot
+                   ("="|":"|" ")
+                   ?inputroot
+               |   ?
+                   tab
+                   ("="|":"|" ")
+                   ?tab
+               |   ?
+                   derivatives
+                   ("="|":"|" ")
+                   ?derivatives
+               |   sess
+                   ?
+                   ("="|":"|" ")
+                   ?sessionID
+               |   ?
+                   point
+                   ?
+                   ("="|":"|" ")
+                   ?keypoints
+               |     window
+                     ?
+                     ("="|":"|" ")
+                     ?windowSizes
+                 & @( !windowSizes
+                    :   (#>0:?v)
+                        ~#@
+                        (#>0:?a)
+                        ~#@
+                        (#>0:?j)
+                    )
+                 & !v !a !j:?windowSizes
+               |   ?XXX
+                 & out$(str$("Didn't understand: " !XXX))
+               )
+             )
+        &   put
+          $ ( str
+            $ ( "root: "
+                !root
+                \n
+                "inputroot: "
+                !inputroot
+                \n
+                "sessionID: "
+                !sessionID
+                \n
+                "keypoints: "
+                !keypoints
+                \n
+                "windows  : "
+                ( velocity acceleration jerk:?v-a-j
+                &   map
+                  $ ( ( 
+                      =   
+                        .   !v-a-j:%?el ?v-a-j
+                          & !el ": " !arg " "
+                      )
+                    . !windowSizes
+                    )
+                )
+                \n
+              )
             )
-          : (?sep.?OS)
-        & !(its.globals)
         & -1*clk$:?t0
-        &   (its.doit)
-          $ ( !(its.inputroot)
-            . !(its.date)
-            . !(its.keypoints)
-            . !(its.windowSizes)
-            )
+        & ( 
+          |   (its.doit)
+            $ ( !root
+              . !inputroot
+              . !tab
+              . !derivatives
+              . !sessionID
+              . !keypoints
+              . !windowSizes
+              )
+          )
         & clk$:?t1
         & out$(str$(flt$(!t1+!t0,3) " s"))
   );
 
 r=
-  get'("stats.bra",TXT)
-& rmv$(str$(stats ".bak"))
-& ren$("stats.bra".str$(stats ".bak"))
+  get'("OpenPose2VAJ.bra",TXT)
+& rmv$(str$(OpenPose2VAJ ".bak"))
+& ren$("OpenPose2VAJ.bra".str$(OpenPose2VAJ ".bak"))
 &   put
-  $ ( "{stats.bra
+  $ ( "{OpenPose2VAJ.bra
 𝕌𝕋𝔽-𝟠
 
 Read all OpenPose json files and create single tab separated file for pose_keypoints_2d for single person}
 
 "
-    , "stats.bra"
+    , "OpenPose2VAJ.bra"
     , NEW
     , BIN
     )
-& lst'(X,"stats.bra",APP,BIN)
-& put'(\n,"stats.bra",APP,BIN)
-& lst'(r,"stats.bra",APP,BIN)
-& put$(str$("\nnew'" X ";\n"),"stats.bra",APP,BIN)
+& lst'(OpenPose2VAJ,"OpenPose2VAJ.bra",APP,BIN)
+& put'(\n,"OpenPose2VAJ.bra",APP,BIN)
+& lst'(r,"OpenPose2VAJ.bra",APP,BIN)
+&   put
+  $ ( str$("\nnew'" OpenPose2VAJ ";\n")
+    , "OpenPose2VAJ.bra"
+    , APP
+    , BIN
+    )
 & ;
 
-new'X;
+new'OpenPose2VAJ;

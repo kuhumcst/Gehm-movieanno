@@ -1,0 +1,95 @@
+{speakseries.bra
+𝕌𝕋𝔽-𝟠
+
+Read yyyymmdd_Praat_long.TextGrid.html and output 'speaker \t feedback y/n \t start \t end \t word \n'}
+
+speakseries=
+  (html-input="praat/html/20230310_Praat_long.TextGrid.html")
+  ( doit
+  =   
+    .   !arg:(?Sep.?arg)
+      & nestML$(get$(!arg,HT ML)):?html
+      &   !html
+        :   ?
+            ( html
+            .   
+              , ? (body.,? (table.,? (tbody.,?tbody)) ?) ?
+            )
+            ?
+      &     map
+          $ ( ( 
+              =   
+                .       !arg
+                      : ( tr
+                        .   
+                          ,   (td.,?start)
+                              (td.,?end)
+                              (td.,?duration)
+                              (td.,?latency)
+                              (td.,?between)
+                              (td.,?speaker)
+                              ?
+                              (td.~,?word)
+                              ?
+                        )
+                    & ( 
+                      |   (   !word:? (strong.?,?word) ?
+                            & out$(YEAH !word)
+                            & y
+                          | n
+                          )
+                        : ?fb
+                      )
+                    & ( !word:
+                      |   !speaker
+                          \t
+                          (   !word:? (strong.?,?word) ?
+                            & (|out$(YEss !word))
+                            & y
+                          | n
+                          )
+                          \t
+                          (@(!start:?b "." ?s)&!b !s)
+                          \t
+                          (@(!end:?b "." ?s)&!b !s)
+                          \t
+                          !word
+                          \n
+                      )
+                  | 
+              )
+            . !tbody
+            )
+        : ?U
+      & @(!arg:?A html (("\\"|"/"):?sep) ?B)
+      & str$(!A html !Sep tab):?directory
+      & (feedback.mkdir)$!directory
+      & put$(str$!U,str$(!directory !Sep !B ".tab"),NEW,BIN)
+  )
+  ( new
+  =   speakseries r
+    . |(its.doit)$(.arg$|!(its.html-input))
+  );
+
+r=
+  get'("speakseries.bra",TXT)
+& rmv$(str$(speakseries ".bak"))
+& ren$("speakseries.bra".str$(speakseries ".bak"))
+&   put
+  $ ( "{speakseries.bra
+𝕌𝕋𝔽-𝟠
+
+Read yyyymmdd_Praat_long.TextGrid.html and output 'speaker \\t feedback y/n \\t start \\t end \\t word \\n'}
+
+"
+    , "speakseries.bra"
+    , NEW
+    , BIN
+    )
+& lst'(speakseries,"speakseries.bra",APP,BIN,WYD)
+& put'(\n,"speakseries.bra",APP,BIN)
+& lst'(r,"speakseries.bra",APP,BIN,WYD)
+& put$(str$("\nnew'" speakseries ";\n"),"speakseries.bra",APP,BIN)
+& ;
+
+new'speakseries;

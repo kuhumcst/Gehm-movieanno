@@ -1,3 +1,41 @@
+/*
+Program optionally takes TextGrid data that looks like this
+
+
+
+SP07F	y	003	025	Yes
+SP01F	y	250	272	Yes
+SP01F	n	280	296	so
+SP01F	n	300	304	I
+SP01F	n	308	326	think
+SP01F	n	332	342	we
+SP01F	n	346	356	are
+SP01F	n	360	406	recording
+SP01F	n	410	426	now
+SP01F	y	486	508	yes
+SP01F	n	612	630	And
+SP01F	y	656	676	yeah
+SP01F	n	682	686	I
+SP01F	n	690	702	dont
+
+
+First column: speaker ID, as also used in file names for single speaker movies and single speaker OpenPose data.
+Second column: y if feedback word, n if not.
+Third column: start time in milliseconds from start of movie
+Fourth column: end time in milliseconds from start of movie
+Fifth column: word spoken
+
+All speakers participating in the movie have their words combined in one file.
+This file would have the name '20220610_Praat_long.TextGrid.html.tab'
+
+Files must be located relative to the working directory in the folder praat/html/tab/
+
+
+
+*/
+#define OVERDOINGIT 0
+
+#include "option.h"
 #include <opencv2/opencv.hpp>
 #include <string>
 
@@ -155,8 +193,7 @@ struct speakerdata
             :
             energyKinetic(0), energyPotential(0), gesture(0), frame2cs(0), coloursE(0), words(0),
             topmargin(0), bottommargin(0), nwords(0), nvaj(0), currentPersonWordIndex(0), VAJ(0)
-            {
-            }
+            {}
     };
 
 speakerdata::speakerdata(std::string vaj, const char* textgriddata, const char* speaker, long maxframes)
@@ -439,7 +476,9 @@ speakerdata::speakerdata(std::string vaj, const char* textgriddata, const char* 
             }
         }
     fclose(fpvaj);
-        // check
+#if 0
+    // check
+    
     std::string fnam = std::string(speaker) + "-framd2cs";
 
     FILE* fpframe2cs = fopen(fnam.c_str(), "w");
@@ -451,7 +490,7 @@ speakerdata::speakerdata(std::string vaj, const char* textgriddata, const char* 
             }
         fclose(fpframe2cs);
         }
-
+#endif
     if(textgriddata)
         {
         printf("textgriddata %s speaker %s\n", textgriddata, speaker);
@@ -497,6 +536,7 @@ speakerdata::speakerdata(std::string vaj, const char* textgriddata, const char* 
                     }
                 }
             fclose(fp);
+#if 0
             // check
             fp = fopen(speaker, "wb");
             if(fp)
@@ -507,12 +547,13 @@ speakerdata::speakerdata(std::string vaj, const char* textgriddata, const char* 
                     }
                 fclose(fp);
                 }
+#endif
             }
         }
     }
 
 
-std::vector<std::tuple< std::string, std::string, std::string>> listmovies(char* name, char* speaker)
+std::vector<std::tuple< std::string, std::string, std::string>> listmovies(char* name, const char* speaker)
     {
     std::vector<std::tuple< std::string, std::string, std::string>> lst;
     const std::filesystem::path sandbox{ name };
@@ -776,18 +817,14 @@ std::string u8(std::filesystem::path Path)
     return String8;
     }
 
-std::filesystem::path FinalDatasetRoot(const char* yyyymmdd)
+std::filesystem::path FinalDatasetRoot(std::filesystem::path Root, const char* inputDataSet, const char* yyyymmdd)
     {
-    std::filesystem::path Root(".");
+    std::filesystem::path dataset(Root / inputDataSet / yyyymmdd);
+    printf("FinalDatasetRoot = [%s]\n", dataset.string().c_str());
+    if(std::filesystem::exists(dataset))
+        return dataset;
 
-    if(std::filesystem::exists(Root / yyyymmdd))
-        return Root;
-
-    Root = "FinalDataset";
-    if(std::filesystem::exists(Root / yyyymmdd))
-        return Root;
-
-    printf("Folder %s that contains SeparatedSpeakersVideo and OriginalVideo does not exist. Exiting.\n", yyyymmdd);
+    printf("Folder %s that contains SeparatedSpeakersVideo and OriginalVideo does not exist. Exiting.\n", dataset.string().c_str());
     exit(-1);
     }
 
@@ -801,6 +838,8 @@ bool checkTextGridAvailable(const char* yyyymmdd)
     bool TextGridAvailable = std::filesystem::exists(TextGridTabSeparated);
     if(TextGridAvailable)
         return true;
+    return false;
+#if 0
     std::filesystem::path Stem_html = TextGridTabSeparated.filename().stem(); // 20210323_Praat_long.TextGrid.html
     std::filesystem::path YYYYMMDD{ yyyymmdd }; // e.g. 20210323
     std::filesystem::path Html = HtmlPath / Stem_html; // praat/html/20210323_Praat_long.TextGrid.html
@@ -894,18 +933,20 @@ bool checkTextGridAvailable(const char* yyyymmdd)
             }
         }
     return true;
+#endif
     }
 
-int createTabFromJSON(std::filesystem::path Root, const char* yyyymmdd)
+#if OVERDOINGIT
+int createTabFromJSON(std::filesystem::path InputFolder, const char* yyyymmdd)
     {
 #ifdef __linux__ 
     //linux code goes here
     std::string command("bracmat \"get\\$\\\"jsn2tab.bra\\\"\" ");  // Creates tabulated output from OpenPose JSON files.
-    command += u8(Root) + " " + yyyymmdd;
+    command += u8(InputFolder) + " " + yyyymmdd;
 #elif _WIN32
     // windows code goes here
     std::string command("bracmat \"get$\\\"jsn2tab.bra\\\"\" ");  // Creates tabulated output from OpenPose JSON files.
-    command += u8(Root) + " " + yyyymmdd;
+    command += u8(InputFolder) + " " + yyyymmdd;
 #else
 #error Do not know the OS
 #endif
@@ -929,8 +970,15 @@ int createVAJ(const char* yyyymmdd, const char* windows)
     std::cout << command.c_str() << std::endl;
     return system(command.c_str());
     }
+#endif
 
-double getSpeakerData(size_t numberOfSpeakers, std::filesystem::path Root, speakerdata** pdata, const char* yyyymmdd, const char* windows, std::vector<std::tuple<std::string, std::string, std::string>> list, long maxframes)
+double getSpeakerData(size_t numberOfSpeakers,
+#if OVERDOINGIT
+
+                      std::filesystem::path InputFolder,
+#endif
+                      std::filesystem::path KineticFolder,
+                      speakerdata** pdata, const char* yyyymmdd, const char* windows, std::vector<std::tuple<std::string, std::string, std::string>> list, long maxframes)
     {
     size_t icurrentspeaker = 0;
     double topmargin = 0;
@@ -944,17 +992,19 @@ double getSpeakerData(size_t numberOfSpeakers, std::filesystem::path Root, speak
             std::string extension; // including period
             stemfrom9 = std::get<1>(*it); // another way to access an element that is not the first. (LISPish)
             std::cout << "stemfrom9:" << stemfrom9 << std::endl;
-            sprintf(staticname, "vaj/%s-%s.vaj/%s-%s_keypoints-%s.vaj.tab", yyyymmdd, windows, yyyymmdd, stemfrom9.c_str(), windows);
+            sprintf(staticname, "%s/%s-%s/%s-%s_keypoints-%s.vaj.tab",
+                    KineticFolder.string().c_str(), yyyymmdd, windows, yyyymmdd, stemfrom9.c_str(), windows);
             std::string vaj = staticname;
             std::cout << "vaj:" << vaj << std::endl;
+#if OVERDOINGIT
             if(!exists(vaj.c_str()))
                 {
-                std::filesystem::path KeypointsTab("keypoints.tab");
-                KeypointsTab = KeypointsTab / yyyymmdd / (std::string(yyyymmdd) + "-" + stemfrom9 + "_keypoints.tab");
+                std::filesystem::path KeypointsTab("keypoints");
+                KeypointsTab = KeypointsTab / (std::string(yyyymmdd)) / (std::string(yyyymmdd) + "-" + stemfrom9 + "_keypoints.tab");
                 if(!exists(KeypointsTab))
                     {
                     printf("%s does not exist. Is it zipped?\n... Going to try to create it from OpenPose JSON output in FinalDataset folder. (Which may be zipped too!)\n", u8(KeypointsTab).c_str());
-                    createTabFromJSON(Root, yyyymmdd);
+                    createTabFromJSON(InputFolder, yyyymmdd);
                     if(!exists(KeypointsTab))
                         {
                         printf("Cannot create %s. Exiting.\n", u8(KeypointsTab).c_str());
@@ -963,6 +1013,7 @@ double getSpeakerData(size_t numberOfSpeakers, std::filesystem::path Root, speak
                     }
                 createVAJ(yyyymmdd, windows);
                 }
+#endif
             if(!exists(vaj.c_str()))
                 {
                 std::cout << "vaj(2):" << vaj << std::endl;
@@ -978,7 +1029,7 @@ double getSpeakerData(size_t numberOfSpeakers, std::filesystem::path Root, speak
     return topmargin;
     }
 
-long dostuff(std::filesystem::path Root, const char* yyyymmdd, const char* windows, std::vector<std::tuple<std::string, std::string, std::string>> list, std::string inputPath, std::string outputPath, long maxframes)
+long dostuff(std::filesystem::path InputFolder, std::filesystem::path KineticFolder, const char* yyyymmdd, const char* windows, std::vector<std::tuple<std::string, std::string, std::string>> list, std::string inputPath, std::filesystem::path OutputPath, long maxframes)
     {
     // Open input video
     cv::VideoCapture cap(inputPath);
@@ -1000,10 +1051,11 @@ long dostuff(std::filesystem::path Root, const char* yyyymmdd, const char* windo
     int fourcc = static_cast<int>(cap.get(cv::CAP_PROP_FOURCC));
 
     // Open output video writer
-    cv::VideoWriter writer(outputPath, fourcc, fps, cv::Size(frame_width, frame_height));
+    printf("OutputPath %s\n", (OutputPath).string().c_str());
+    cv::VideoWriter writer((OutputPath).string().c_str(), fourcc, fps, cv::Size(frame_width, frame_height));
     if(!writer.isOpened())
         {
-        std::cerr << "Error: Cannot open output video file." << std::endl;
+        std::cerr << "Error: Cannot open output video file." << (OutputPath).string() << std::endl;
         return 0;
         }
     cv::Mat frame;
@@ -1012,7 +1064,12 @@ long dostuff(std::filesystem::path Root, const char* yyyymmdd, const char* windo
     if(numberOfSpeakers > 0)
         {
         speakerdata** pdata = new speakerdata * [numberOfSpeakers];
-        double topmargin = getSpeakerData(numberOfSpeakers, Root, pdata, yyyymmdd, windows, list, maxframes);
+        double topmargin = getSpeakerData(numberOfSpeakers,
+#if OVERDOINGIT
+                                          InputFolder,
+#endif
+                                          KineticFolder,
+                                          pdata, yyyymmdd, windows, list, maxframes);
         printf("topmargin %f\n", topmargin);
         size_t icurrentspeaker = 0;
         icurrentspeaker = 0;
@@ -1168,73 +1225,167 @@ long dostuff(std::filesystem::path Root, const char* yyyymmdd, const char* windo
     return 0;
     }
 
+#define MOVIEANNOVERSION "1.0"
+#define MOVIEANNODATE __DATE__
+#define MOVIEANNOCOPYRIGHT "2026 Center for Sprogteknologi, University of Copenhagen"
 
 int main(int argc, char* argv[])
     {
-    const char* yyyymmdd = "20230310";
+    if(argc == 1)
+        {
+        LOG1LINE("");
+        LOG1LINE("MOVIEANNO version " MOVIEANNOVERSION " (" MOVIEANNODATE ")");
+        LOG1LINE("Copyright (C) " MOVIEANNOCOPYRIGHT);
+        if /*constexpr*/(sizeof(ptrdiff_t) == 8)
+            LOG1LINE("64-bit");
+        else
+            LOG1LINE("32-bit");
+// GNU >> 
+        LOG1LINE("MOVIEANNO comes with ABSOLUTELY NO WARRANTY; for details use option -w.");
+        LOG1LINE("This is free software, and you are welcome to redistribute it under");
+        LOG1LINE("certain conditions; use option -r for details.");
+        LOG1LINE("");
+        LOG1LINE("");
+// << GNU
+        LOG1LINE("Use option -h for usage.");
+        return 0;
+        }
+
+    optionStruct Option;
+
+    OptReturnTp optResult = Option.readArgs(argc, argv);
+    if(optResult == OptReturnTp::Error)
+        return 1;
+
+    if(optResult == OptReturnTp::Leave)
+        { // option -r, -w, -? or -h
+        return 0;
+        }
+
+    const char* audio = Option.arga;
+    const char* root = Option.argd; //  ~/Gehm  (relative)  /data/Gehm (absolute)
+    const char* windows = Option.argf; // 9-11-13;
+    const char* kinetics = Option.argk; // vaj
+    const char* inputDataSet = Option.argm; // FinalDataset;
+    const char* output = Option.argo; // overlay
+    const char* speaker = Option.argp; // SP07F
+    const char* yyyymmdd = Option.args; // 20230310
+
+    if(audio == 0)
+        {
+        fprintf(stderr, "-a Location of audio annotation not specified\n");
+        return 1;
+        }
+    if(root == 0)
+        {
+        root = "./";
+        }
+    if(windows == 0)
+        {
+        fprintf(stderr, "-f Number of frames for computing velocity, acceleration and jerk not specified.\n");
+        return 2;
+        }
+    if(kinetics == 0)
+        {
+        fprintf(stderr, "-k Location of velocity, acceleration and jerk annotations not specified.\n");
+        return 3;
+        }
+    if(inputDataSet == 0)
+        {
+        fprintf(stderr, "-m Location of input dataset not specified.\n");
+        return 4;
+        }
+    if(yyyymmdd == 0)
+        {
+        fprintf(stderr, "-s Session name not specified.\n");
+        return 5;
+        }
+    if(output == 0)
+        {
+        fprintf(stderr, "-s Output folder not specified.\n");
+        return 6;
+        }
+    if(speaker == 0)
+        {
+        // That's OK. Show all speakers
+        }
+
     long maxframes = -1;
     char locname[1000];
+    /*
     printf("argc %d\n", argc);
-    const char* windows = "9-11-13";
-    char* speaker = 0;
+    //char* speaker = 0;
     if(argc > 1)
         {
-        yyyymmdd = argv[1];
+        root = argv[1];
         if(argc > 2)
             {
-            char* endptr = 0;
-            // movieanno date maxframes
-            // If maxframes > 0, annotate max n frames and shorten movie to maxframes.
-            // If maxframes <= 0, copy all frames to output, annotate as many as possible.
-            maxframes = strtol(argv[2], &endptr, 10);
-            if(*endptr == '-')
+            inputDataSet = argv[2];
+            if(argc > 3)
                 {
-                maxframes = -1; // default
-                windows = argv[2]; // e.g. 5-7-9
-                if(argc > 3)
+                yyyymmdd = argv[3];
+                if(argc > 4)
                     {
-                    maxframes = strtol(argv[3], &endptr, 10);
-                    if(*endptr != 0)
+                    char* endptr = 0;
+                    // movieanno date maxframes
+                    // If maxframes > 0, annotate max n frames and shorten movie to maxframes.
+                    // If maxframes <= 0, copy all frames to output, annotate as many as possible.
+                    maxframes = strtol(argv[4], &endptr, 10);
+                    if(*endptr == '-')
                         {
-                        // movieanno date windows name
                         maxframes = -1; // default
-                        speaker = argv[3];
+                        windows = argv[4]; // e.g. 5-7-9
+                        if(argc > 5)
+                            {
+                            maxframes = strtol(argv[5], &endptr, 10);
+                            if(*endptr != 0)
+                                {
+                                // movieanno date windows name
+                                maxframes = -1; // default
+                                speaker = argv[5];
+                                }
+                            else if(argc > 6)
+                                {
+                                // movieanno date windows n name
+                                // Load separate speaker video
+                                speaker = argv[6];
+                                }
+                            }
                         }
-                    else if(argc > 4)
+                    else if(*endptr == 0)
                         {
-                        // movieanno date windows n name
+                        // Load all speakers video
+                        if(argc > 5)
+                            {
+                            // movieanno date n name
+                            // Load separate speaker video
+                            speaker = argv[5];
+                            }
+                        }
+                    else
+                        {
+                        // movieanno date name
                         // Load separate speaker video
                         speaker = argv[4];
                         }
                     }
                 }
-            else if(*endptr == 0)
-                {
-                // Load all speakers video
-                if(argc > 3)
-                    {
-                    // movieanno date n name
-                    // Load separate speaker video
-                    speaker = argv[3];
-                    }
-                }
-            else
-                {
-                // movieanno date name
-                // Load separate speaker video
-                speaker = argv[2];
-                }
             }
+        printf("root:%s, inputDataSet:%s, session:%s #v-#a-#j:%s maxframes:%ld speaker:%s\n", root, inputDataSet, yyyymmdd, windows, maxframes, speaker);
         }
     else
         {
-        printf("Date %s\nmovieanno yyyymmdd [#v-#a-#j] [#frames] [speaker]\n", __DATE__);
+        printf("Date %s\nmovieanno root input-dataset-folder yyyymmdd [#v-#a-#j] [#frames] [speaker]\n", __DATE__);
         return -1;
         }
+*/
+    std::filesystem::path Root(root);
 
-    std::filesystem::path Root = FinalDatasetRoot(yyyymmdd);
+    std::filesystem::path InputFolder = FinalDatasetRoot(Root, inputDataSet, yyyymmdd);
+    std::filesystem::path KineticFolder(Root / kinetics);
+    std::filesystem::path OutputFolder(Root / output);
 
-    sprintf(locname, "%s", u8((Root / yyyymmdd / "SeparatedSpeakersVideo")).c_str()); // From contents of folder we can count number of speakers.
+    sprintf(locname, "%s", u8((InputFolder / "SeparatedSpeakersVideo")).c_str()); // From contents of folder we can count number of speakers.
                                                           // That number is part of the output file name,
                                                           // also if only one, specific, speaker is shown.
     if(!exists(locname))
@@ -1245,9 +1396,9 @@ int main(int argc, char* argv[])
     std::vector<std::tuple<std::string, std::string, std::string>> list = listmovies(locname, speaker);
     if(list.size() == 0)
         {
-        sprintf(locname, "%s", u8((Root / yyyymmdd / "OpenPoseKeypoints" / yyyymmdd / yyyymmdd)).c_str()); // From contents of folder we can count number of speakers.
+        sprintf(locname, "%s", u8((InputFolder / "OpenPoseKeypoints" / yyyymmdd / yyyymmdd)).c_str()); // From contents of folder we can count number of speakers.
         if(!exists(locname))
-            sprintf(locname, "%s", u8((Root / yyyymmdd / "OpenPoseKeypoints" / yyyymmdd)).c_str()); // From contents of folder we can count number of speakers.
+            sprintf(locname, "%s", u8((InputFolder / "OpenPoseKeypoints" / yyyymmdd)).c_str()); // From contents of folder we can count number of speakers.
         if(exists(locname))
             {
             list = listmovies(locname, speaker);
@@ -1268,7 +1419,7 @@ int main(int argc, char* argv[])
     std::string inputMovie;
     if(speaker == 0)
         {// User did not specify a speaker, so show all speakers. (And Do not show the overlayed velocity, acceleration and jerk vectors.)
-        sprintf(locname, "%s", u8((Root / yyyymmdd / "OriginalVideo")).c_str());
+        sprintf(locname, "%s", u8((InputFolder / "OriginalVideo")).c_str());
         inputMovie = listmovie(locname);
         }
     else
@@ -1277,20 +1428,22 @@ int main(int argc, char* argv[])
         std::string extension; // including period
         stem = std::get<0>(*begin(list));
         extension = std::get<2>(begin(list)[0]);  // one way to access an element that is not the first
-        sprintf(locname, "%s%s", u8((Root / yyyymmdd / "SeparatedSpeakersVideo" / stem)).c_str(), extension.c_str()); // a == stem
+        sprintf(locname, "%s%s", u8((InputFolder / "SeparatedSpeakersVideo" / stem)).c_str(), extension.c_str()); // a == stem
         inputMovie = locname;
         }
     std::cout << "inputMovie:" << inputMovie << std::endl;
 
-    std::string outputPath;
     const char* speakerName = "all";
     size_t numberOfSpeakers = list.size();
     if(numberOfSpeakers == 1)
         speakerName = speaker;
+    printf("Create overlay folder\n");
+    std::filesystem::create_directories(OutputFolder);
     sprintf(locname, "%s-%s-%s-%ld-%zu.with.overlay.mov",
             yyyymmdd, windows, speakerName, maxframes, numberOfSpeakers);
-    outputPath = locname;
-    maxframes = dostuff(Root, yyyymmdd, windows, list, inputMovie, outputPath, maxframes);
+    std::filesystem::path OutputPath(OutputFolder / locname);
+    printf("locname %s\n", OutputPath.string().c_str());
+    maxframes = dostuff(InputFolder, KineticFolder, yyyymmdd, windows, list, inputMovie, OutputPath, maxframes);
 
     return 0;
     }

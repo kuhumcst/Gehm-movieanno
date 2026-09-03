@@ -1,0 +1,173 @@
+{doall.bra
+𝕌𝕋𝔽-𝟠
+
+Call feedback.bra to create html formatted output from TextGrid data (From the FinalDataset folder)
+Call speakseries.bra to create tabulated output from the html formatted dialogue data
+Call OpenPose2VAJ.bra to create velocity/acceleration/jerk data from OpenPose data.
+Call movieanno (binary executable) to add an VAJ and TextGriddata overlay to movies in FinalDataset. Audio gets lost in the process.
+Call addaudio.sh to (a) move flags in the output movie, so videoplayers don't complain (b) add audio (found in FinalDataset in separate audio files.}
+
+doall=
+  (root="/home/bart/Gehm-movieanno/")
+  (inputroot=FinalDataset)
+  (sessionID=20210504)
+  (keypoints=OpenPoseKeypoints)
+  (windowSizes=9 9 9)
+  (tab=keypoints)
+  (speech=praat)
+  (derivatives=vaj)
+  (outputroot=overlay)
+  ( mkdir
+  =   
+    .   sys
+      $ ( str
+        $ ( "mkdir "
+            (!OS:Windows&|"-p ")
+            !arg
+            ( !OS:Windows&" >nul 2>&1"
+            | " >/dev/null 2>&1"
+            )
+          )
+        )
+  )
+  ( doit
+  =   zoompaths
+    .   ~
+      |   get$"feedback.bra"
+        & "
+           From TextGrid data, produce output that shows the structure of the dialogue
+           in terms of the number of words a participant can speak before another takes over.
+           The shorter the sequences, the further to the right the words are positioned, columnwise.
+           In that way, short interruptions are visually easily detected.
+           Speakers are colour coded.
+           Words have time stamps and duration.
+           Output is HTML formatted.
+          "
+        & out$"Calling feedback"
+        &     (feedback.doit)
+            $ ( !sep
+              . !(its.root)
+              . !(its.inputroot)
+              . !(its.speech)
+              .   "20210323_Praat_long.TextGrid"
+                  "20210504_Praat_long.TextGrid"
+                  "20210616_Praat_long.TextGrid"
+                  "20211007_Praat_long.TextGrid"
+                  "20211119_Praat_long.TextGrid"
+                  "20220204_Praat_long.TextGrid"
+                  "20220408_Praat_long.TextGrid"
+                  "20220610_Praat_long.TextGrid"
+                  "20220722_Praat_long.TextGrid"
+                  "20220916_Praat_long.TextGrid"
+                  "20221209_Praat_long.TextGrid"
+                  "20230310_Praat_long.TextGrid"
+              )
+          : ?zoompaths
+        & get$"speakseries.bra"
+        & "
+           Read yyyymmdd_Praat_long.TextGrid.html and output 'speaker \\t feedback y/n \\t start \\t end \\t word \\n'
+          "
+        &   map
+          $ ( ( 
+              = .out$"Calling speakseries"&(speakseries.doit)$(!sep.!arg)
+              )
+            . !zoompaths
+            )
+        & "
+           Read all OpenPose json files for a session and create, for each participant, a single tab-separated file for pose_keypoints_2d
+          "
+        & get$"OpenPose2VAJ.bra"
+        & out$"Calling OpenPose2VAJ"
+        &   (OpenPose2VAJ.doit)
+          $ ( !(its.root)
+            . !(its.inputroot)
+            . !(its.tab)
+            . !(its.derivatives)
+            . !(its.sessionID)
+            . !(its.keypoints)
+            . !(its.windowSizes)
+            )
+        &   map$((=."-" !arg).!(its.windowSizes))
+          : "-" ?hyphenatedwindowSizes
+        &     str
+            $ ( (!OS:Windows&|src/movieanno/)
+                movieanno
+                " -a"
+                !(its.speech)
+                " -d"
+                !(its.root)
+                " -f"
+                !hyphenatedwindowSizes
+                " -k"
+                !(its.derivatives)
+                " -m"
+                !(its.inputroot)
+                " -o"
+                !(its.outputroot)
+                " -s"
+                !(its.sessionID)
+              )
+          : ?command
+        & out$("command: " !command)
+        & out$"Calling movieanno"
+        & (   sys$!command
+            & ( !OS:Windows&
+              |       str
+                    $ ( "./addaudio.sh"
+                        " "
+                        !(its.root)
+                        !(its.inputroot)
+                        " "
+                        !(its.root)
+                        !(its.outputroot)
+                      )
+                  : ?command
+                & out$!command
+                & out$"Calling addaudio"
+                & sys$!command
+              | 
+              )
+          | 
+          )
+      | 
+  )
+  "By declaring doall local in 'new', global doall is not only protected. Its members cannot be called from other objects that are accessed from 'new' or nested calls. "
+  ( new
+  =   doall
+    .   ~
+      |   
+        &   ( @(!v:? Windows ?)&("\\".Windows.".\\")
+            | ("/".Unix."/home/bart/Gehm-movieanno/")
+            )
+          : (?sep.?OS.?(its.root))
+        & '$r:(=?save-r)
+        & ((its.doit)$|)
+        & '$save-r:(=?r)
+  );
+
+r=
+  get'("doall.bra",TXT)
+& rmv$(str$(doall ".bak"))
+& ren$("doall.bra".str$(doall ".bak"))
+&   put
+  $ ( "{doall.bra
+𝕌𝕋𝔽-𝟠
+
+Call feedback.bra to create html formatted output from TextGrid data (From the FinalDataset folder)
+Call speakseries.bra to create tabulated output from the html formatted dialogue data
+Call OpenPose2VAJ.bra to create velocity/acceleration/jerk data from OpenPose data.
+Call movieanno (binary executable) to add an VAJ and TextGriddata overlay to movies in FinalDataset. Audio gets lost in the process.
+Call addaudio.sh to (a) move flags in the output movie, so videoplayers don't complain (b) add audio (found in FinalDataset in separate audio files.}
+
+"
+    , "doall.bra"
+    , NEW
+    , BIN
+    )
+& lst'(doall,"doall.bra",APP,BIN,WYD)
+& put'(\n,"doall.bra",APP,BIN)
+& lst'(r,"doall.bra",APP,BIN,WYD)
+& put$(str$("\nnew'" doall ";\n"),"doall.bra",APP,BIN)
+& ;
+
+new'doall;

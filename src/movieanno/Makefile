@@ -14,7 +14,7 @@
 #        OPENCV_LIBS="-L/opt/opencv/lib -lopencv_core -lopencv_highgui ..."
 
 TARGET   := movieanno
-SRCS     := movieanno.cpp
+SRCS     := movieanno.cpp argopt.cpp option.cpp
 BUILDDIR := build
 
 CXX      ?= g++

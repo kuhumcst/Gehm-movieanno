@@ -1,0 +1,1935 @@
+{feedback.bra
+𝕌𝕋𝔽-𝟠
+
+Progress:
+(1) TextGrid data only:
+* Finding the lengths of uninterrupted speech.
+* Create HTML table with colour coding for speakers.
+* The shorter the lenght of uninterrupted speach, the further to the right. 
+* Each line contains one word: start time, end time and difference between start of current word
+  and end of previous word. Time unit: centiseconds (seconds if using fixed point notation).
+(2) Compile some statistics to show, for each Zoom recording, how many times we see short
+    interruptions (between 1 and 5 words) involving words such 
+         yeah, okay, yes, no, ok, sure
+    (with or without capitalisation).
+
+    As a first step, I have created a ordered word list that puts all declared feedback words among
+    the first 23 words in the list of a total of 3456 words. It is as follows:
+    (a)  Create two word lists
+           (1) a list with pairs (word, word frequency). Here, the word frequency is computed by
+               counting word occurrences in all zoom meetings.
+           (2) a similar list, but each occurrence of a word weighed by length of the unbroken
+               utterance it is part of. So if two people are talking at the same time, utterances
+               get broken up in short word sequences. The lengths of these short sequences constitute
+               the weighing factor, or rather, the inverse of the length. So the shorter the sequence
+               the higher the weight.
+    (b)  Sort the two lists according to the (weighed or not) frequencies, so the most prominent words
+         are near the top of the list.
+    (c)  Replace the (weighed or not) frequencies by cardinal numbers, starting from 1. Words with the
+         same (weighed or not) frequency get the same number. Otherwise, numbers are incremented by 1.
+    (d)  Sort the two lists alphabetically. The lists list all words in the same order.
+    (e)  Iterate over all words, creating a new list where the number from the weighted list is divided
+         by the number from the unweighted list. The more frequent a word is, the further down the list
+         it will be pushed, while the more prominent the word is in short unbroken utterances, the higher
+         up the list it will be pushed.
+
+    The first 'word' in the list is the empty string. Probably Whisper did hear a sound but could not
+    make out what it was. 
+    Here are the first 55 words:
+
+      yeah      thank     nice      youre     problem   my
+      okay      exactly   sure      but       abstracts change
+      yes       thanks    lets      remember  marianne  pilar
+      hmm       mhm       great     very      always    i
+      oh        mm        see       im        indeed    so
+      no        thats     patrizia  perhaps   send
+      bye       fine      theres    think     hello
+      right     sorry     its       important course
+      ok        good      everybody soon      will
+      well      wow       all       still     many
+                                              
+    
+    The contrast with the unweighted list is stark:
+
+      the       of        think     can       what      there   
+      i         know      its       then      at        they
+      to        it        this      okay      also      will
+      that      but       dont      would     with      well
+      and       in        mean      on        just      people
+      we        have      yes       about     very
+      you       is        because   was       or
+      so        right     not       do        im
+      yeah      be        thats     are       one
+      a         for       if        like      really
+
+    Of the latter list, 41 words are not present in the first list:
+
+      the       in        if        what      people
+      to        have      can       at
+      that      is        then      also
+      and       be        would     with
+      we        for       on        just
+      you       this      about     or
+      a         dont      was       one
+      of        mean      do        really
+      know      because   are       there
+      it        not       like      they
+}
+
+feedback=
+  (root=)
+  (inputroot=)
+  (speech=)
+  (posThreshold=15)
+  (negThreshold=15)
+  ( meetings
+  =   "20210323_Praat_long.TextGrid"
+      "20210504_Praat_long.TextGrid"
+      "20210616_Praat_long.TextGrid"
+      "20211007_Praat_long.TextGrid"
+      "20211119_Praat_long.TextGrid"
+      "20220204_Praat_long.TextGrid"
+      "20220408_Praat_long.TextGrid"
+      "20220610_Praat_long.TextGrid"
+      "20220722_Praat_long.TextGrid"
+      "20220916_Praat_long.TextGrid"
+      "20221209_Praat_long.TextGrid"
+      "20230310_Praat_long.TextGrid"
+  )
+  (meetings="20210504_Praat_long.TextGrid")
+  ( agreedFeedbackWords
+  = yeah nice okay sure yes hmm mhm great oh mm no fine right ok good
+  )
+  (notAgreedFeedbackWords=hmm mhm mm right)
+  ( EntrainedSegments
+  =   (20210323.25.12 30,13 00)
+      (20210504.22.11 00,11 30)
+      (20210616.13.6 30,7 00)
+      (20211007.37.18 30,19 00)
+      (20211119.18.9 00,9 30)
+      (20220204.39.19 30,20 00)
+      (20220408.18.9 00,9 30)
+      (20220610.10.5 00,5 30)
+      (20220722.64.32 00,32 30)
+      (20220916.22.11 00,11 30)
+      (20221209.70.35 00,35 30)
+      (20230310.16.8 00,8 30)
+  )
+  ( NonEntrainedSegments
+  =   (20210323.8.4 00,4 30)
+      (20210323.42.21 00,21 30)
+      (20210504.2.1 00,1 30)
+      (20210504.11.5 30,6 00)
+      (20210616.71.35 30,36 00)
+      (20210616.51.25 30,26 00)
+      (20211007.86.43 00,43 30)
+      (20211007.84.42 00,42 30)
+      (20211119.12.6 00,6 30)
+      (20211119.39.19 30,20 00)
+      (20220204.19.9 30,10 00)
+      (20220204.58.29 00,29 30)
+      (20220408.66.33 00,33 30)
+      (20220408.52.26 00,26 30)
+      (20220610.32.16 00,16 30)
+      (20220610.46.23 00,23 30)
+      (20220722.99.49 30,50 00)
+      (20220722.49.24 30,25 00)
+      (20220916.27.13 30,14 00)
+      (20220916.14.7 00,7 30)
+      (20221209.102.51 00,51 30)
+      (20221209.9.4 30,5 00)
+      (20230310.39.19 30,20 00)
+      (20230310.27.13 30,14 00)
+  )
+  ( mkdir
+  =   a
+    .   sys
+      $ ( str
+        $ ( "mkdir "
+            (   !OS:Windows
+              &   whl
+                ' ( @(!arg:?a "/" ?arg)
+                  & str$(!a "\\" !arg):?arg
+                  )
+              & 
+            | "-p "
+            )
+            (out$!arg&!arg)
+            ( !OS:Windows&" >nul 2>&1"
+            | " >/dev/null 2>&1"
+            )
+          )
+        )
+  )
+  ( readTextGrid
+  =     r fix getSpeakers inv startend stats tabs
+      , A AA B BB C CC D K L Persons latency wlen
+      , R Zoom a b c d diff e feedbackWords feedbacks sep
+      , lines max min mx name textgrid txt x y zoom zoomturns
+    .   ( fix
+        =   a b sgn
+          .     (   !arg:<0
+                  & -1*!arg:?arg
+                  & "-"
+                | 
+                )
+              : ?sgn
+            & ( !arg:<10&str$(!sgn "0.0" !arg)
+              | !arg:<100&str$(!sgn "0." !arg)
+              | @(!arg:?a [-3 ?b)&str$(!sgn !a "." !b)
+              )
+        )
+      & ( tabsh
+        =   n tab pre
+          .   8:?n
+            & chr$160:?nbsp
+            & ( tab
+              =   
+                .     !arg+-1:>0:?arg
+                    &   ( th
+                        .   
+                          ,   !pre
+                              !arg
+                              " word"
+                              ( !arg:1&
+                              | s
+                              )
+                        )
+                        (!nbsp !nbsp:?pre&tab$!arg)
+                  | 
+              )
+            & ">=":?pre
+            & tab$!n
+        )
+      & ( tabs
+        =   txt r n fb color tab
+          .   !arg:(?txt.?fb.?r.?color)
+            & 8+-1*!r:?n
+            & ( tab
+              =   
+                .     !arg+-1:>0:?arg
+                    & (td.,) tab$!arg
+                  | 
+              )
+            &   tab$!n
+                ( td
+                .   (style.str$("color:" !color))
+                  ,   !fb:"---"&(strong.,!txt)
+                    | !txt
+                )
+        )
+      & ( inv
+        =   L x
+          .   :?L
+            & whl'(!arg:%?x ?arg&!x !L:?L)
+            & !L
+        )
+      & ( getSpeakers
+        =   
+          .   mop
+            $ ( (=.!arg:#*%@?arg&!arg)
+              .   mop
+                $ ( (=.!arg:(?arg.?)&!arg)
+                  . !arg
+                  . (=a b)
+                  . (=+)
+                  )
+              . (=+)
+              . (=a b)
+              )
+        )
+      & ( startend
+        =   end start
+          .   !arg:(?.?start.?) ?:? (?.?.?end.?)
+            & !end+-1*!start
+        )
+      & ( stats
+        =     Zoom diff start end pers word fb length block blocks blcks
+            , p1 p2 el K L interruption wrds latency wlen
+            , centisecs pa pz speakers
+          .   !arg:(?Zoom.?arg)
+            &   !arg
+              : (?wlen.?latency.?diff.?start.?end.?pers.?word.?fb.?length) ?
+            & :?blocks
+            &   whl
+              ' ( !arg:?block [!length ?arg
+                &     ( !pers
+                      . !length,startend$!block
+                      .   map
+                        $ ( ( 
+                            =   
+                              .     !arg
+                                  : ( ?wlen
+                                    . ?latency
+                                    . ?diff
+                                    . ?start
+                                    . ?end
+                                    . ?pers
+                                    . ?word
+                                    . ?fb
+                                    . ?length
+                                    )
+                                & (!start.!end.!wlen.!latency.!diff.!word.!fb)
+                            )
+                          . !block
+                          )
+                      )
+                      !blocks
+                  : ?blocks
+                &   !arg
+                  : (?wlen.?latency.?diff.?start.?end.?pers.?word.?fb.?length) ?
+                )
+            & inv$!blocks:?blcks
+            & (|lst$(blcks,str$(!Zoom ".blocks"),NEW,RAW,WYD))
+            & :?L:?interruption
+            &   whl
+              ' (   !blocks
+                  : (?block:(?pers.?length,?centisecs.?wrds)) ?blocks
+                & (   !length:<6
+                    & !block !interruption:?interruption
+                  |       !block
+                          ( !interruption:
+                          | (interruption.!interruption)
+                          )
+                          !L
+                      : ?L
+                    & :?interruption
+                  )
+                )
+            & (|lst$(L,str$(!Zoom ".interruptions"),NEW,RAW,WYD))
+            & :?K
+            &   whl
+              ' ( !L:%?el ?L
+                &     (   !el:(interruption.?interruption)
+                        & getSpeakers$!interruption:?speakers
+                        & (   !K:(?,(?p1.?)) ?
+                            & !L:(?p2.?) ?
+                            & (     !p1:!p2
+                                  &   (   !speakers:?pa !p1 ?pz
+                                        & !pa !pz:?speakers
+                                        & !speakover
+                                      | !interruption-by
+                                      )
+                                      !p1
+                                      by
+                                      !speakers
+                                |   (     !interruption
+                                        :   ?
+                                            (!p2.?)
+                                            ?
+                                            (!p1.?)
+                                            ?
+                                      & !turn-taking
+                                    | !turn-giving
+                                    )
+                                    !p1
+                                    to
+                                    !p2
+                              , !interruption
+                              )
+                          | (!short-remarks !speakers,!interruption)
+                          )
+                      | (!monologue,!el)
+                      )
+                      !K
+                  : ?K
+                )
+            & inv$!K:?K
+            & (|lst$(K,str$(!Zoom ".turns"),NEW,RAW,WYD))
+            & !K
+        )
+      & !(its.agreedFeedbackWords):?feedbackWords
+      & !arg:?zoom
+      & @(!zoom:?path #?date "_" ?remainder)
+      & (@(!path:? %@?sep)|"/":?sep)
+      & ( seconds
+        =   min sec
+          .   !arg:#%?min %?sec
+            & whl'@(!sec:0 %?sec)
+            & str$(60*!min+!sec)
+        )
+      &     map
+          $ ( ( 
+              =   
+                .     !arg:(!date.?.?start,?end)
+                    & (seconds$!start,seconds$!end)
+                  | 
+              )
+            . !(its.EntrainedSegments)
+            )
+        : ?entrained
+      &     map
+          $ ( ( 
+              =   
+                .     !arg:(!date.?.?start,?end)
+                    & (seconds$!start,seconds$!end)
+                  | 
+              )
+            . !(its.NonEntrainedSegments)
+            )
+        : ?nonentrained
+      & @(!zoom:?session "_" ?)
+      & (     str$(!(its.root) !(its.inputroot) "/" !session "/" !zoom)
+            : ?pth
+          & out$(pth !pth)
+          & get$(!pth,STR):?textgrid
+          &     map
+              $ ( ( 
+                  =   
+                    .     @(!arg:"            " ?arg)
+                        & (...!arg)
+                      | @(!arg:"        " ?arg)&(..!arg)
+                      | @(!arg:"    " ?arg)&(.!arg)
+                      | !arg
+                  )
+                . vap$(.!textgrid.\n)
+                )
+            : ?lines
+          & (|lst$(lines,textgrid,NEW,WYD))
+          & ( Example
+            | ( lines
+              =   "File type = \"ooTextFile\""
+                  "Object class = \"TextGrid\""
+                  "xmin = 0 "
+                  "xmax = 1656.664 "
+                  "tiers? <exists> "
+                  "size = 7 "
+                  "item []: "
+                  (."item [1]:")
+                  (.."class = \"IntervalTier\" ")
+                  (.."name = \"SP05F\" ")
+                  (.."xmin = 492.828 ")
+                  (.."xmax = 1509.688 ")
+                  (.."intervals: size = 150 ")
+                  (.."intervals [1]:")
+                  (..."xmin = -1 ")
+                  (..."xmax = -1 ")
+                  (..."text = \"20\" ")
+                  (.."intervals [2]:")
+                  (..."xmin = 492.828 ")
+                  (..."xmax = 493.008 ")
+                  (..."text = \"No\" ")
+              )
+            )
+          & !lines:?L
+          & :?A
+          & :?feedbacks
+          &   whl
+            ' ( !L:%?a ?L
+              & :?B
+              &   whl
+                ' ( !L:(.?b) ?L
+                  & :?C
+                  &   whl
+                    ' ( !L:(..?c) ?L
+                      & (@(!c:"name = \"" ?name "\" ")|)
+                      & :?D
+                      &   whl
+                        ' ( !L:(...?d) ?L
+                          & !d !D:?D
+                          )
+                      & inv$!D:?D
+                      &     ( !c
+                            .       !D
+                                  :   ( @(?:"xmin =" ?x)
+                                      &   get$(str$("[" !x "]"),JSN,MEM)
+                                        : (,?x)
+                                      & div$(1000*!x+5,10):?min
+                                      )
+                                      ( @(?:"xmax =" ?y)
+                                      &   get$(str$("[" !y "]"),JSN,MEM)
+                                        : (,?y)
+                                      & div$(1000*!y+5,10):?max
+                                      )
+                                      @(?:? \" ?txt \" ?)
+                                & whl'@(!txt:?txt " ")
+                                & whl'@(!txt:" " ?txt)
+                                & ( !txt:
+                                  |   !feedbackWords:? ~<>!txt ?
+                                    &   (!min.!max.!txt.!name) !feedbacks
+                                      : ?feedbacks
+                                    &   (!max+-1*!min.!txt) !feedbackLenghts
+                                      : ?feedbackLenghts
+                                  | 
+                                  )
+                                & !min !max (!name.!txt)
+                              | !D
+                            )
+                            !C
+                        : ?C
+                      )
+                  & (!b.inv$!C) !B:?B
+                  )
+              & (!a.inv$!B) !A:?A
+              )
+          & inv$!A:?A
+          & "A is a list of participants. Words are listed for each participant."
+          & (|lst$(A,A0,NEW,WYD))
+          & (|lst$(feedbacks,feedbacks1,NEW,WYD))
+          &     mop
+              $ ( 
+                . mop$(.!feedbacks.(=a b).(=+))
+                . (=+)
+                . (=a b)
+                )
+            : ?feedbacks
+          & (|lst$(feedbacks,feedbacks2,NEW,WYD))
+          &     map
+              $ ( ( 
+                  =   b
+                    .   !arg:(?.?b)
+                      &   map
+                        $ ( ( 
+                            =   b
+                              .   !arg:(?.?b)
+                                &   map
+                                  $ ( ( 
+                                      =   
+                                        .       !arg
+                                              : (?.%?min %?max (?name.%?txt))
+                                            & ( !min
+                                              . !max
+                                              . !name
+                                              . !txt
+                                              .     !txt:
+                                                  & "(?)"
+                                                |   !feedbackWords:? ~<>!txt ?
+                                                  & "---"
+                                                | 
+                                              )
+                                          | 
+                                      )
+                                    . !b
+                                    )
+                            )
+                          . !b
+                          )
+                  )
+                . !A
+                )
+            : ?AA
+          & "AA is a single list of words. 
+         Unsorted!
+         Each word has a name, a start time and an end time.
+         Times are in centiseconds. (Textgrid times rounded to nearest centisecond.)"
+          & (|lst$(AA,AA,NEW,WYD))
+          &     mop
+              $ ( 
+                . mop$(.!AA.(=a b).(=+))
+                . (=+)
+                . (=a b)
+                )
+            : ?BB
+          & "BB is as AA, but sorted by time."
+          & ( 
+            | lst$(BB,str$(!path BB !date "_" !remainder),NEW,WYD)
+            )
+          & 0:?mx:?my
+          & :?L
+          & !BB:?K
+          & (|lst$(BB,BB,NEW,WYD))
+          & :?D
+          & 1:?R
+          &   whl
+            ' ( !K:(?a.?b.?c.?d.?e) ?K
+              & !c+!Persons:?Persons
+              & ( !c:!D&1+!R:?R
+                | 1:?R&!c:?D
+                )
+              & !a+-1*!mx:?diff
+              & !a+-1*!my:?latency
+              & !b:?mx
+              & !a:?my
+              & (!b+-1*!a.!latency.!diff.!a.!b.!c.!d.!e.!R) !L:?L
+              )
+          & (|lst$(L,L,NEW,WYD))
+          & :?D
+          & 1:?R
+          &   whl
+            ' ( !L:(?wlen.?latency.?diff.?a.?b.?c.?d.?e.?r) ?L
+              & ( !c:!D&!R:?r
+                | !r:?R&!c:?D
+                )
+              & (!wlen.!latency.!diff.!a.!b.!c.!d.!e.!r) !K:?K
+              )
+          & ( Uitvoer
+            =   K zoom
+              .   !arg:(?zoom.?K)
+                & @(!zoom:?Zoom "_" ?)
+                & stats$(!Zoom.!K):?zoomturns
+                &     map
+                    $ ( ( 
+                        =   
+                          .   !arg:(?wlen.?latency.?diff.?a.?b.?c.?d.?e.?r)
+                            &   fix$!wlen
+                                \t
+                                fix$!latency
+                                \t
+                                fix$!diff
+                                \t
+                                fix$!a
+                                \t
+                                fix$!b
+                                \t
+                                !c
+                                \t
+                                !d
+                                \t
+                                !e
+                                \t
+                                !r
+                                \n
+                        )
+                      . !K
+                      )
+                  : ?CC
+                & put$(str$!CC,str$(!(its.root) "allspeakers.txt"),NEW)
+                &   ( html
+                    .   
+                      ,   (head.,(style.,"th {text-align:left}"))
+                          ( body
+                          .   
+                            , ( table
+                              .   
+                                ,   ( thead
+                                    .   
+                                      ,   (|(th.,!Zoom))
+                                          (th.,"Word start")
+                                          (th.,"Word end")
+                                          (th.,"Word length")
+                                          (th.,Latency)
+                                          (th.,Between)
+                                          (th.,Speaker)
+                                          tabsh$(!d.!e.!r.!color)
+                                    )
+                                    ( tbody
+                                    .   
+                                      ,   map
+                                        $ ( ( 
+                                            =   color p
+                                              .     !arg
+                                                  : ( ?wlen
+                                                    . ?latency
+                                                    . ?diff
+                                                    . ?a
+                                                    . ?b
+                                                    . ?c
+                                                    . ?d
+                                                    . ?e
+                                                    . ?r
+                                                    )
+                                                & @( !c
+                                                   : ? #%?p (F|M)
+                                                   )
+                                                &   (   !p:1
+                                                      & black
+                                                    |   !p:2
+                                                      & green
+                                                    |   !p:3
+                                                      & blue
+                                                    |   !p:4
+                                                      & red
+                                                    |   !p:5
+                                                      & darkblue
+                                                    |   !p:6
+                                                      & brown
+                                                    |   !p:7
+                                                      & magenta
+                                                    |   !p:8
+                                                      & yellow
+                                                    |   !p:9
+                                                      & lightblue
+                                                    |   !p:10
+                                                      & lightgreen
+                                                    | black
+                                                    )
+                                                  : ?color
+                                                &   ( tr
+                                                    .   
+                                                      ,   ( 
+                                                          | (td.,!Zoom)
+                                                          )
+                                                          (td.,fix$!a)
+                                                          (td.,fix$!b)
+                                                          (td.,fix$!wlen)
+                                                          (td.,fix$!latency)
+                                                          (td.,fix$!diff)
+                                                          (td.,!c)
+                                                          tabs$(!d.!e.!r.!color)
+                                                    )
+                                                    \n
+                                            )
+                                          . !K
+                                          )
+                                    )
+                              )
+                          )
+                    )
+                  : ?CC
+                & (its.mkdir)$(str$(!(its.root) !(its.speech)))
+                &   (its.mkdir)
+                  $ (str$(!(its.root) !(its.speech) !Sep html))
+                &     str
+                    $ ( !(its.root)
+                        !(its.speech)
+                        !sep
+                        html
+                        !sep
+                        !date
+                        "_"
+                        !remainder
+                        ".html"
+                      )
+                  : ?htmloutput
+                & put$(toML$!CC,!htmloutput,NEW)
+                & (!htmloutput.str$("[[" !Zoom "]]").!zoomturns)
+            )
+          & (|lst$(K,K,NEW,WYD))
+          &     map
+              $ ( ( 
+                  =   
+                    .     !arg:(?.?.?.?start.?.?.?word.?)
+                        & (   !(its.agreedFeedbackWords):? ~<>!word ?
+                            & (!start.!word)
+                          | "---"
+                          )
+                      | 
+                  )
+                . !K
+                )
+            : ?fbwrds
+          & (|lst$(fbwrds,fbwrds,NEW,WYD,RAW))
+          & :?prv
+          &     mop
+              $ ( ( 
+                  =   
+                    .     !arg:(?st.?)
+                        & (   !prv:
+                            & !st:?prv
+                            & 0
+                          | (.div$(-1*!prv+(!st:?prv),100))
+                          )
+                      | 0
+                  )
+                . !fbwrds
+                . (=a b)
+                . (=+)
+                )
+            : ?latencies
+          & (|lst$(latencies,latencies,NEW,WYD,RAW))
+          & !FeedbackLatencies+!latencies:?FeedbackLatencies
+          & :?prv
+          &     mop
+              $ ( ( 
+                  =   
+                    .     !arg:(?st.?)
+                        & (   !prv:
+                            & !st:?prv
+                            & 0
+                          | (.div$(-1*!prv+(!st:?prv),100))
+                          )
+                      | :?prv&0
+                  )
+                . !fbwrds
+                . (=a b)
+                . (=+)
+                )
+            : ?latencies
+          & (|lst$(latencies,latencies,NEW,WYD,RAW))
+          & !FeedbackLatenciesStrict+!latencies:?FeedbackLatenciesStrict
+          & (|lst$(FeedbackLatenciesStrict,FeedbackLatenciesStrict,NEW))
+          & ( 
+            |     map
+                $ ( ( 
+                    =   start end
+                      .   !arg:(?start,?end)
+                        & 100*!start:?start
+                        & 100*!end:?end
+                        &   map
+                          $ ( ( 
+                              =   
+                                .     !arg:(?wlen.?latency.?diff.?a.?b.?)
+                                    & !a:~<!start
+                                    & !b:~>!end
+                                    & !arg
+                                  | 
+                              )
+                            . !K
+                            )
+                    )
+                  . !entrained !nonentrained
+                  )
+              : ?K
+            )
+          & Uitvoer$(!zoom.!K)
+        | out$(str$("TextGrid file " !zoom " not found"))&(.)
+        )
+  )
+  ( CreatePersonWords
+  =   n P
+    .   put
+      $ (   toML
+          $ ( html
+            .   
+              , ( body
+                .   
+                  , ( table
+                    .   
+                      ,   (tr.,(th.,Participant) (th.,"# Words"))
+                            mop
+                          $ ( ( 
+                              =   
+                                .   !arg:#?n*%@?P
+                                  & (tr.,(td.,!P) (td.,!n))
+                              )
+                            . !arg
+                            . (=+)
+                            . (=a b)
+                            )
+                    )
+                )
+            )
+        , str$(!(its.root) "PersonWords.html")
+        , NEW
+        )
+  )
+  ( getFeedbackWordStats
+  =   dial utt wrds wrd n
+    .       mop
+          $ ( ( 
+              =   kind n wrd
+                .     !arg:#?n*(?kind.?wrd)
+                    & (low$!wrd.!wrd)^(!n.!kind)
+                  | 1
+              )
+            .   mop
+              $ ( ( 
+                  =   meet dial
+                    .   !arg:(?meet.?dial)
+                      &   mop
+                        $ ( ( 
+                            =   kind utt
+                              .   !arg:(%@?kind ?,?utt)
+                                &   mop
+                                  $ ( ( 
+                                      =   per nr dur wrds
+                                        .     !arg
+                                            : (?per.?nr,?dur.?wrds)
+                                          &   mop
+                                            $ ( ( 
+                                                =   st en du wrd
+                                                  .       !arg
+                                                        : (?st.?en.?du.?wrd."---")
+                                                      & (!kind.!wrd)
+                                                    | 0
+                                                )
+                                              . !wrds
+                                              . (=a b)
+                                              . (=+)
+                                              )
+                                      )
+                                    . !utt
+                                    . (=a b)
+                                    . (=+)
+                                    )
+                            )
+                          . !dial
+                          . (=a b)
+                          . (=+)
+                          )
+                  )
+                . !arg
+                . (=a b)
+                . (=+)
+                )
+            . (=+)
+            . (=*)
+            )
+        : ?REs
+      & out$"feedback.bra Klar"
+      & REs
+  )
+  ( wordDurations
+  =   meet dial utt per nr dur wrds st en du wrd n
+    .   mop
+      $ ( ( 
+          =   
+            .   !arg:(?meet.?dial)
+              &   mop
+                $ ( ( 
+                    =   kind
+                      .   !arg:(%@?kind ?,?utt)
+                        &   mop
+                          $ ( ( 
+                              =   
+                                .   !arg:(?per.?nr,?dur.?wrds)
+                                  &   mop
+                                    $ ( ( 
+                                        =   
+                                          .       !arg
+                                                : (?st.?en.?.?.?.?wrd.?)
+                                              & (!en+-1*!st.!wrd)
+                                            | 0
+                                        )
+                                      . !wrds
+                                      . (=a b)
+                                      . (=+)
+                                      )
+                              )
+                            . !utt
+                            . (=a b)
+                            . (=+)
+                            )
+                    )
+                  . !dial
+                  . (=a b)
+                  . (=+)
+                  )
+          )
+        . !arg
+        . (=a b)
+        . (=+)
+        )
+  )
+  ( getWordStats
+  =   meet dial utt per nr dur wrds st en du wrd n w
+    .   mop
+      $ ( (=.!arg:#?n*(.?w)&(!w.!n))
+        .   mop
+          $ ( ( 
+              =   
+                .   !arg:(?meet.?dial)
+                  &   mop
+                    $ ( ( 
+                        =   kind
+                          .   !arg:(%@?kind ?,?utt)
+                            &   mop
+                              $ ( ( 
+                                  =   
+                                    .   !arg:(?per.?nr,?dur.?wrds)
+                                      &   mop
+                                        $ ( ( 
+                                            =   
+                                              .       !arg
+                                                    : (?st.?en.?du.?wrd.?)
+                                                  & (.low$!wrd)
+                                                | 0
+                                            )
+                                          . !wrds
+                                          . (=a b)
+                                          . (=+)
+                                          )
+                                  )
+                                . !utt
+                                . (=a b)
+                                . (=+)
+                                )
+                        )
+                      . !dial
+                      . (=a b)
+                      . (=+)
+                      )
+              )
+            . !arg
+            . (=a b)
+            . (=+)
+            )
+        . (=+)
+        . (=+)
+        )
+  )
+  ( getWordStatsWght
+  =   meet dial utt per nr dur wrds wgt st en du wrd n w
+    .   mop
+      $ ( (=.!arg:#?n*(.?w)&(!w.!n))
+        .   mop
+          $ ( ( 
+              =   
+                .   !arg:(?meet.?dial)
+                  &   mop
+                    $ ( ( 
+                        =   kind
+                          .   !arg:(%@?kind ?,?utt)
+                            &   mop
+                              $ ( ( 
+                                  =   
+                                    .   !arg:(?per.?nr,?dur.?wrds)
+                                      & !nr^-1:?wgt
+                                      &   mop
+                                        $ ( ( 
+                                            =   
+                                              .       !arg
+                                                    : (?st.?en.?du.?wrd.?)
+                                                  & !wgt*(.low$!wrd)
+                                                | 0
+                                            )
+                                          . !wrds
+                                          . (=a b)
+                                          . (=+)
+                                          )
+                                  )
+                                . !utt
+                                . (=a b)
+                                . (=+)
+                                )
+                        )
+                      . !dial
+                      . (=a b)
+                      . (=+)
+                      )
+              )
+            . !arg
+            . (=a b)
+            . (=+)
+            )
+        . (=+)
+        . (=+)
+        )
+  )
+  ( weightSort
+  =   n w
+    .   mop
+      $ ( (=.!arg:(?w.?n)&(!n.!w))
+        . !arg
+        . (=+)
+        . (=+)
+        )
+  )
+  ( number
+  =   n w i N
+    .   0:?i:?N
+      &   mop
+        $ ( ( 
+            =   
+              .   !arg:(?n.?w)
+                & ( !w
+                  .   !n:!N&!i
+                    | !n:?N&1+!i:?i
+                  )
+            )
+          .   mop
+            $ ( (=.!arg:(?n.?w)&(!n^-1.!w))
+              . !arg
+              . (=+)
+              . (=+)
+              )
+          . (=+)
+          . (=+)
+          )
+  )
+  ( multiply
+  =   wordstatWght wordstat wrd N D
+    .   !arg:(?wordstatWght.?wordstat)
+      &   mop
+        $ ( ( 
+            =   
+              .     !arg:(?wrd.?N)
+                  & !wordstat:?+(!wrd.?D)+?wordstat
+                  & (!N*!D^-1.!wrd)
+                | !arg
+            )
+          . !wordstatWght
+          . (=+)
+          . (=+)
+          )
+  )
+  ( getPeriods
+  =   meet dial utt per nr dur wrds st en du wrd hsh reform turns
+    .   ( reform
+        =   s e w
+          .   mop
+            $ ( ( 
+                = .!arg:(?s,?e.?w)&(!s.!e.!w)
+                )
+              . !arg
+              . (=+)
+              . (=+)
+              )
+        )
+      & !arg:(?hsh.?turns)
+      &   mop
+        $ ( ( 
+            =   
+              .   !arg:(?meet.?dial)
+                & ( !meet
+                  .   reform
+                    $ ( mop
+                      $ ( ( 
+                          =   kind
+                            .     !arg:(%@?kind ?,?utt)
+                                &   mop
+                                  $ ( ( 
+                                      =   
+                                        .       !arg
+                                              : (?per.?nr,?dur.?wrds)
+                                            &   mop
+                                              $ ( ( 
+                                                  =   
+                                                    .       !arg
+                                                          : (?st.?en.?du.?wrd.?)
+                                                        & (hsh..find)$!wrd
+                                                        & (!st,!en.!wrd)
+                                                      | 0
+                                                  )
+                                                . !wrds
+                                                . (=a b)
+                                                . (=+)
+                                                )
+                                          | AAARRGH
+                                      )
+                                    . !utt
+                                    . (=a b)
+                                    . (=+)
+                                    )
+                              | UMMPHHHH
+                          )
+                        . !dial
+                        . (=a b)
+                        . (=+)
+                        )
+                      )
+                  )
+            )
+          . !turns
+          . (=a b)
+          . (=+)
+          )
+  )
+  ( meltPeriods
+  =   A B s e r posperiods negperiods concat,ZOOM nn pp zoom
+    .   ( concat
+        =   L s e w S v o PN ee
+          .   :?L
+            & (|lst$(arg,concatarg1,NEW,WYD,RAW))
+            &   whl
+              ' ( !arg:(?s.?e.?PN,?w)+?arg
+                & ( !PN:N&!arg:(?.~>!e.P,?)+?
+                  | (!s.!e.!PN,!w) !L:?L
+                  )
+                )
+            & whl'(!L:%?s ?L&!s+!arg:?arg)
+            & (|lst$(arg,concatarg2,NEW,WYD,RAW))
+            &   whl
+              ' ( !arg:(?s.?e.?PN,?w)+?arg
+                & !e+30:?S
+                & !e:?o
+                & (   !PN:P
+                    &   whl
+                      ' (   !arg
+                          : ( (?.<!o:?e.?,?v)+?arg
+                            |   ?
+                                  ( (`<!S.?ee.P,?v)
+                                  & !ee:?e
+                                  & !e+30:?S
+                                  & !e:?o
+                                  )
+                                + ?arg
+                            )
+                        & !w "|" !v:?w
+                        )
+                    &   (!s.!e:>!o|!o.P,!w) !L
+                      : ?L
+                  |     whl
+                      ' ( !arg:(<!S.?e.N,?v)+?arg
+                        & !w "|" !v:?w
+                        & !e+30:?S
+                        & !e:?o
+                        )
+                    & (!s.!o.N,!w) !L:?L
+                  )
+                )
+            & whl'(!L:%?s ?L&!s+!arg:?arg)
+            & !arg
+        )
+      & !arg:(?posperiods,?negperiods)
+      & 0:?ZOOM
+      &   whl
+        ' ( !posperiods:(?zoom.?pp)+?posperiods
+          & !negperiods:(!zoom.?nn)+?negperiods
+          &     mop
+              $ ( ( 
+                  =   
+                    .   !arg:(?s.?e.?r)&(!s.!e.P,!r)
+                      | 
+                  )
+                . !pp
+                . (=+)
+                . (=+)
+                )
+            : ?A
+          &     mop
+              $ ( ( 
+                  =   
+                    .   !arg:(?s.?e.?r)&(!s.!e.N,!r)
+                      | 
+                  )
+                . !nn
+                . (=+)
+                . (=+)
+                )
+            : ?B
+          & !ZOOM+(!zoom.concat$(!A+!B)):?ZOOM
+          )
+      & !ZOOM
+  )
+  ( ColourPosAndNeg
+  =     meet dial utt per nr dur wrds s st End en du wrd nxt
+      , turns BLU Colour RED TOT UNK periods perio PN
+    .   ( COLOURS
+        =   
+          .     !arg:(?st.?en.?du.?wrd.?)
+              & ( 
+                |   whl
+                  ' ( !End:<!st:~0
+                    & nxt$!perio:(?perio.?s.?End.?PN)
+                    )
+                )
+              & ( 
+                | out$(str$(!st "," !s "|" !en "," !End "[" !PN "]" !wrd))
+                )
+              &   (   !en:>!End
+                    & (|out$(str$(!en ">" !End)))
+                    & (   !PN:P
+                        & (   !Colour:RED
+                            & :?Colour
+                            & nxt$!perio:(?perio.?s.?End.?PN)
+                            & (RED.END)
+                          | 
+                          )
+                      |   !Colour:BLUE
+                        & :?Colour
+                        & nxt$!perio:(?perio.?s.?End.?PN)
+                        & (BLUE.END)
+                      | nxt$!perio:(?perio.?s.?End.?PN)&
+                      )
+                  | 
+                  )
+                  (   !st:!s
+                    & (   !PN:P
+                        & ( !Colour:RED&
+                          |   ( !Colour:BLUE&(BLUE.END)
+                              | 
+                              )
+                              (RED:?Colour.START)
+                          )
+                      |   !Colour:
+                        & (BLUE:?Colour.START)
+                      | 
+                      )
+                  | 
+                  )
+                  ( (   !wrd:
+                      & !UNK+!en+-1*!st:?UNK
+                    |   !Colour:RED
+                      & !RED+!en+-1*!st:?RED
+                    |   !Colour:BLUE
+                      & !BLU+!en+-1*!st:?BLU
+                    | 
+                    )
+                  & !arg
+                  )
+            | 0
+        )
+      & !arg:(?periods.?turns)
+      & 0:?TOT:?RED:?BLU:?UNK
+      & :?Colour
+      & ( nxt
+        =   s PN e
+          .   ( !arg:(?s.?e.?PN,?)+?arg
+              | 0:?s:?e
+              )
+            & (!arg.!s.!e.!PN)
+        )
+      & (   mop
+          $ ( ( 
+              =   perio s End PN
+                .   !arg:(?meet.?dial)
+                  & !periods:?+(!meet.?perio)+?
+                  & nxt$!perio:(?perio.?s.?End.?PN)
+                  & ( !meet
+                    .   mop
+                      $ ( ( 
+                          =   kind
+                            .   !arg:(?kind,?utt)
+                              & ( !kind
+                                ,   mop
+                                  $ ( ( 
+                                      =   per nr dur wrds
+                                        .     !arg
+                                            : (?per.?nr,?dur.?wrds)
+                                          & !dur+!TOT:?TOT
+                                          & ( !per
+                                            . !nr,!dur
+                                            .   ( !Colour:
+                                                | (!Colour.START)
+                                                )
+                                                  mop
+                                                $ ( COLOURS
+                                                  . !wrds
+                                                  . (=a b)
+                                                  . (=a b)
+                                                  )
+                                                ( !Colour:
+                                                | (!Colour.END)
+                                                )
+                                            )
+                                      )
+                                    . !utt
+                                    . (=a b)
+                                    . (=a b)
+                                    )
+                                )
+                          )
+                        .   ( ~
+                            |     !dial
+                                :   ?
+                                    ( interruption SP05F by SP01F
+                                    , ( SP01F
+                                      . 3,370
+                                      .   (163120.163148.56.Okay."---")
+                                          (163150.163160.2.but.)
+                                          (163164.163490.4.thats.)
+                                      )
+                                    )
+                                    ?dial
+                                    ( monologue
+                                    , ( SP01F
+                                      . 109,5461
+                                      . (166332.166358.876.Yes."---") ?
+                                      )
+                                    )
+                                    ?
+                              & (|lst$(dial,dial,NEW,WYD,RAW))
+                            | 
+                            )
+                          & !dial
+                        . (=a b)
+                        . (=a b)
+                        )
+                    )
+              )
+            . !turns
+            . (=a b)
+            . (=a b)
+            )
+        . !TOT,!RED,!BLU,!UNK
+        )
+  )
+  ( countDurations
+  =     turns PROD wordstatNR mostFreq p n pos neg ptd ntd
+      , BLU N RED TOT UNK colouredTurns hneg hpos negperiods nn periods
+      , pn posperiods
+    .   !arg:(?turns.?PROD.?wordstatNR)
+      &     mop
+          $ ( (=w n.!arg:(?w.?n)&(!n.!w))
+            . !wordstatNR
+            . (=+)
+            . (=+)
+            )
+        : ?mostFreq
+      & 0:?pos:?neg
+      & new$hash:?hpos
+      & new$hash:?hneg
+      & (hpos..ISO)$
+      & (hneg..ISO)$
+      & !(its.posThreshold):?ptd
+      & !(its.negThreshold):?ntd
+      &   whl
+        ' ( ( !pos:?+([?pn:[<!ptd)
+            | !neg:?+([?nn:[<!ntd)
+            |   ~
+              & out$(nn !nn pn !pn)
+              & !nn:<!pn
+            )
+          & !PROD:(?N.?p)+?PROD
+          & ( !p:
+            | (hneg..find)$!p
+            | !p+!pos:?pos&(hpos..insert)$(!p.!N)
+            )
+          & !mostFreq:(?N.?n)+?mostFreq
+          & ( !n:
+            | (hpos..find)$!n
+            | !n+!neg:?neg&(hneg..insert)$(!n.!N)
+            )
+          )
+      & (|lst$(pos,pos,NEW,RAW))
+      & (|lst$(neg,neg,NEW,RAW))
+      & (its.getPeriods)$(!hpos.!turns):?posperiods
+      & (|lst$(posperiods,posperiods,NEW,RAW,WYD))
+      & (its.getPeriods)$(!hneg.!turns):?negperiods
+      & (|lst$(negperiods,negperiods,NEW,RAW,WYD))
+      & (its.meltPeriods)$(!posperiods,!negperiods):?periods
+      & (|lst$(periods,periods,NEW,RAW,WYD))
+      & (its.ColourPosAndNeg)$(!periods.!turns):(?colouredTurns.?TOT,?RED,?BLU,?UNK)
+      &   out
+        $ ( str
+          $ ( "ColourPosAndNegDone TOT "
+              !TOT
+              " RED "
+              !RED
+              " "
+              flt$(!RED*!TOT^-1,2)
+              " BLU "
+              !BLU
+              " "
+              flt$(!BLU*!TOT^-1,2)
+              " UNKENT "
+              !UNK
+              " "
+              flt$(!UNK*!TOT^-1,2)
+            )
+          )
+      & !colouredTurns
+  )
+  ( sanitizeColourTags
+  =   meet dial utt per nr dur wrds st en du wrd n ee
+    .   map
+      $ ( ( 
+          =   
+            .   !arg:(?meet.?dial)
+              & ( !meet
+                .   map
+                  $ ( ( 
+                      =   kind
+                        .   !arg:(%?kind,?utt)
+                          & ( !kind
+                            ,   map
+                              $ ( ( 
+                                  =   ST EN
+                                    .   !arg:(?per.?nr,?dur.?wrds)
+                                      &   whl
+                                        ' (   !wrds
+                                            :   ?ee
+                                                (?.START)
+                                                (?.END)
+                                                ?wrds
+                                          & !ee !wrds:?wrds
+                                          )
+                                      &   whl
+                                        ' (   !wrds
+                                            :   ?ee
+                                                (?colour.END)
+                                                (!colour.START)
+                                                ?wrds
+                                          & !ee !wrds:?wrds
+                                          )
+                                      & (!per.!nr,!dur.!wrds)
+                                  )
+                                . !utt
+                                )
+                            )
+                      )
+                    . !dial
+                    )
+                )
+          )
+        . !arg
+        )
+  )
+  ( feedbackIntervals
+  =   meet dial utt per nr dur wrds st en du wrd n
+    .   map
+      $ ( ( 
+          =   
+            .   !arg:(?meet.?dial)
+              &   map
+                $ ( ( 
+                    =   kind
+                      .   !arg:(%@?kind ?,?utt)
+                        &   map
+                          $ ( ( 
+                              =   ST EN
+                                .     !arg:(?per.?nr,?dur.?wrds)
+                                    & 0:?cnt
+                                    &     map
+                                        $ ( ( 
+                                            =   
+                                              .   !arg:(RED.?)
+                                                |   1+!cnt:?cnt
+                                                  & 
+                                            )
+                                          . !wrds
+                                          )
+                                      : % ?
+                                    & !cnt:~>5
+                                    & 10000000000:?ST
+                                    & 0:?EN
+                                    & ( !meet
+                                      . !per
+                                      .   str
+                                        $ (     map
+                                              $ ( ( 
+                                                  =   
+                                                    .       !arg
+                                                          : (?st.?en.?du.?wrd.?)
+                                                        & (   !st
+                                                            : <!ST
+                                                            : ?ST
+                                                          | 
+                                                          )
+                                                        & (   !en
+                                                            : >!EN
+                                                            : ?EN
+                                                          | 
+                                                          )
+                                                        &   !wrd
+                                                            ( !wrd:
+                                                            | " "
+                                                            )
+                                                      |     !arg
+                                                          : (RED.START)
+                                                        & "<"
+                                                      |   !arg:(RED.END)
+                                                        & ">"
+                                                      |   !arg:(BLUE.?)
+                                                        & 
+                                                      | "{{?}}"
+                                                  )
+                                                . !wrds
+                                                )
+                                            : ?L
+                                          &   whl
+                                            ' ( !L:?AAA " " ">" ?ZZZ
+                                              & !AAA "> " !ZZZ:?L
+                                              )
+                                          & !L
+                                          )
+                                      . !ST
+                                      . !EN
+                                      )
+                                  | 
+                              )
+                            . !utt
+                            )
+                    )
+                  . !dial
+                  )
+          )
+        . !arg
+        )
+  )
+  ( tabify
+  =   
+    .   str
+      $ ( map
+        $ ( ( 
+            =   
+              .   !arg:(@(?:"[[" ?meet "]]").?speaker.?words.?start.?end)
+                & !meet \t !speaker \t !start \t !end \t !words \n
+            )
+          . !arg
+          )
+        )
+  )
+  ( interspace
+  =   
+    .     map$((=." " !arg).!arg):" " ?arg
+        & str$!arg
+      | !arg
+  )
+  ( sec
+  = c s.@(!arg:?s [-3 ?c)&str$(!s "." !c)
+  )
+  ( HTML
+  =   meet dial utt per nr dur wrds st en du wrd proc K L
+    .   ( proc
+        =       map
+              $ ( ( 
+                  =   
+                    .   !arg:(?.?,)&
+                      | !arg
+                  )
+                .   nestML
+                  $ ( mop
+                    $ ( ( 
+                        =   Color
+                          .     !arg:(?st.?en.?du.?wrd.?)
+                              & !wrd " "
+                            |   !arg:(?Color.START)
+                              & (strong.style.str$("color:" low$!Color ";"))
+                            |   !arg:(?Color.END)
+                              & (.strong.)
+                        )
+                      . !wrds
+                      . (=a b)
+                      . (=a b)
+                      )
+                    )
+                )
+            : ?L
+          & :?K
+          &   whl
+            ' ( !L:%?ee ?L
+              &     (   !ee:(strong.?att,?t1)
+                      &   whl
+                        ' ( !L:(strong.!att,?t2) ?L
+                          & !t1 !t2:?t1
+                          )
+                      & (strong.!att,!t1)
+                    | !ee
+                    )
+                    !K
+                : ?K
+              )
+          & whl'(!K:%?ee ?K&!ee !L:?L)
+          & !L
+        )
+      &   mop
+        $ ( ( 
+            =   
+              .   !arg:(?meet.?dial)
+                &   (h1.,!meet)
+                      mop
+                    $ ( ( 
+                        =   kind
+                          .   !arg:(?kind,?utt)
+                            &   (h2.,"___" (its.interspace)$!kind "___")
+                                  mop
+                                $ ( ( 
+                                    =   
+                                      .     !arg
+                                          : (?per.?nr,?dur.?wrds)
+                                        & !wrds:? (?st.?.?) ?
+                                        &   (h3.,!per "  " (its.sec)$!st)
+                                            (p.,!proc)
+                                    )
+                                  . !utt
+                                  . (=a b)
+                                  . (=a b)
+                                  )
+                        )
+                      . !dial
+                      . (=a b)
+                      . (=a b)
+                      )
+            )
+          . !arg
+          . (=a b)
+          . (=a b)
+          )
+  )
+  ( sd
+  =   len compiledSD
+    .   !arg:? [?len
+      &     
+          ' ( (a.nums,$len,2)
+            .   0:?sum
+              & 0:?i
+              & 0:?n
+              &   whl
+                ' ( !i:<($len)
+                  & !(idx$(nums,!i,0))*!(idx$(nums,!i,1))+!sum:?sum
+                  & !(idx$(nums,!i,1))+!n:?n
+                  & 1+!i:?i
+                  )
+              & outln$!n
+              & divide$(!sum,!n):?avg
+              & -1*!avg:?navg
+              & 0:?i
+              & 0:?sum
+              &   whl
+                ' ( !i:<($len)
+                  & !(idx$(nums,!i,0))+!navg:?X
+                  & !(idx$(nums,!i,1))*!X*!X+!sum:?sum
+                  & 1+!i:?i
+                  )
+              & sqrt$(divide$(!sum,!n)):?result
+              & !result
+            )
+        : ?SD
+      & new$(UFP,!SD):?compiledSD
+      & (compiledSD..go)$(,!arg)
+      & ((compiledSD..export)$(F,result).(compiledSD..export)$(F,avg))
+  )
+  ( FeedBackLengths
+  =   feedbackLenghtsSorted bundle
+    .   !arg:(?feedbackLenghtsSorted.?bundle)
+      &   mop
+        $ ( (=.!arg:?n*(.?l)&!n*(.!bundle*!l))
+          .   mop
+            $ ( ( 
+                =   
+                  . !arg:?n*(?l.?)&!n*(.div$(!l.!bundle))
+                )
+              . !feedbackLenghtsSorted
+              . (=+)
+              . (=+)
+              )
+          . (=+)
+          . (=+)
+          )
+  )
+  ( hist
+  =   
+    .   ( stars
+        =   
+          .   !arg+-1:~<0:?arg&"*" stars$!arg
+            | \n
+        )
+      & ( num
+        =   k
+          .   !arg:(?arg.?k)
+            & @(!arg:? [?l)
+            &   whl
+              ' (1+!l:~>!k:?l&" " !arg:?arg)
+            & str$!arg
+        )
+      & "D: divisor to scale down bars, so they fit in a text window that is also readable
+                 M: padding to the left of length to right-align length field
+                 N: padding to the left of count to right-align count field
+                "
+      & !arg:(?arg.?name.?D.?M.?N)
+      & 5:?maxblank
+      & 0:?next
+      &   put
+        $ (   str
+            $ ( mop
+              $ ( ( 
+                  =   
+                    .   !arg:#?n*(.?m)
+                      & !m+-1*!next:?blanklines
+                      & :?blank
+                      & (   !blanklines:~>!maxblank
+                          & !m:?next
+                          &   whl
+                            ' ( !blanklines+-1:~<0:?blanklines
+                              &     num$(-1+!next:?next.!M)
+                                    \t
+                                    num$(0.!N)
+                                    \t\n
+                                    !blank
+                                : ?blank
+                              )
+                        |   num$(str$("[x" !blanklines "]").!M) \t num$(0.!N) \t\n
+                          : ?blank
+                        )
+                      & 1+!m:?next
+                      & !blank num$(!m.!M) \t num$(!n.!N) \t stars$(div$(!n,!D))
+                  )
+                . !arg
+                . (=+)
+                . (=a b)
+                )
+              )
+          , str$(!(its.root) !name ".txt")
+          , BIN
+          , NEW
+          )
+  )
+  ( doit
+  =     r
+      , "---" PROD Persons colouredTurns html interruption-by monologue short-remarks
+      , speakover textgrids turn-giving turns wordstat wordstatNR wordstatWght wordstatWghtNR
+      , worddurations
+    .   ~
+      |   speakover:?speakover
+        & interruption:?interruption-by
+        & turn-giving:?turn-giving
+        & short-remarks:?short-remarks
+        & monologue:?monologue
+        &   (!arg:~|(.!(its.meetings)))
+          : ( ?Sep
+            . ?(its.root)
+            . ?(its.inputroot)
+            . ?(its.speech)
+            . ?textgrids
+            )
+        & 0:?Persons
+        & 0:?FeedbackLatencies:?FeedbackLatenciesStrict
+        & :?feedbackLenghts
+        & "The following loop creates an HTML file for each meeting. These files are stored in praat/html"
+        & map$((=.(its.readTextGrid)$!arg).!textgrids):?htmlpath/turns
+        & (|lst$(htmlpath/turns,htmlpath-turns,NEW))
+        &     map
+            $ ( (=.!arg:(?arg.?)&!arg)
+              . !htmlpath/turns
+              )
+          : ?htmlpaths
+        &     map
+            $ ( (=.!arg:(?.?arg)&!arg)
+              . !htmlpath/turns
+              )
+          : ?turns
+        & (|lst$(feedbackLenghts,feedbackLenghts,NEW,RAW,WYD))
+        &     mop
+            $ ( (=.!arg:(?l.?w)&(!l.low$!w))
+              . !feedbackLenghts
+              . (=a a)
+              . (=+)
+              )
+          : ?feedbackLenghtsSorted
+        & ( 
+          | lst$(feedbackLenghtsSorted,feedbackLenghtsSorted,NEW,RAW,WYD)
+          )
+        & (its.FeedBackLengths)$(!feedbackLenghtsSorted.1):?feedbackLenghtsSortedNoWords1
+        & ( 
+          | lst$(feedbackLenghtsSortedNoWords1,feedbackLenghtsSortedNoWords1,NEW,RAW,WYD)
+          )
+        & (its.FeedBackLengths)$(!feedbackLenghtsSorted.2):?feedbackLenghtsSortedNoWords2
+        & ( 
+          | lst$(feedbackLenghtsSortedNoWords2,feedbackLenghtsSortedNoWords2,NEW,RAW,WYD)
+          )
+        & (|lst$(FeedbackLatencies,FeedbackLatencies,NEW,RAW,WYD))
+        & ( 
+          | lst$(FeedbackLatenciesStrict,FeedbackLatenciesStrict,NEW,RAW,WYD)
+          )
+        & feedbackLenghtsSortedNoWords1
+        & (its.hist)$(!feedbackLenghtsSortedNoWords1.feedbackLenghtsSortedNoWords1.5.4.4)
+        & (its.hist)$(!feedbackLenghtsSortedNoWords2.feedbackLenghtsSortedNoWords2.5.4.4)
+        & (its.hist)$(!FeedbackLatencies.FeedbackLatencies.10.3.4)
+        & (its.hist)$(!FeedbackLatenciesStrict.FeedbackLatenciesStrict.10.3.4)
+        & (|lst$(turns,"turns.bra",NEW,RAW,WYD))
+        & (|lst$(Persons,Persons,NEW,RAW,WYD))
+        & (its.CreatePersonWords)$!Persons
+        & (its.wordDurations)$!turns:?worddurations
+        & (|lst$(worddurations,worddurations,NEW,RAW,WYD,BIN))
+        & (its.getFeedbackWordStats)$!turns:?"---"
+        & (|lst$("---",feedbackwords,NEW,WYD))
+        & (its.getWordStats)$!turns:?wordstat
+        & (|lst$(wordstat,wordstat0,NEW,WYD,RAW))
+        & (its.getWordStatsWght)$!turns:?wordstatWght
+        & (its.weightSort)$!wordstat:?wordstat
+        & (its.weightSort)$!wordstatWght:?wordstatWght
+        & (|lst$(wordstatWght,wordstatWght,NEW,WYD,RAW))
+        & (|lst$(wordstat,wordstat,NEW,WYD,RAW))
+        & (its.number)$!wordstat:?wordstatNR
+        & (its.number)$!wordstatWght:?wordstatWghtNR
+        & (|lst$(wordstatNR,wordstatNR,NEW,WYD,RAW))
+        & (|lst$(wordstatWghtNR,wordstatWghtNR,NEW,WYD,RAW))
+        & (its.multiply)$(!wordstatWghtNR.!wordstatNR):?PROD
+        & (|lst$(PROD,wordPROD,NEW,WYD,RAW))
+        & (its.countDurations)$(!turns.!PROD.!wordstatNR):?colouredTurns
+        & (|lst$(colouredTurns,colouredTurns,NEW,WYD,RAW))
+        & (its.sanitizeColourTags)$!colouredTurns:?colouredTurns
+        & (|lst$(colouredTurns,colouredTurnsSanitized,NEW,WYD,RAW))
+        & (its.feedbackIntervals)$!colouredTurns:?intervals
+        & (its.tabify)$!intervals:?tabintervals
+        & (|lst$(tabintervals,"intervals.tab",NEW,BIN))
+        & (|lst$(intervals,intervals,NEW,RAW,WYD))
+        & (its.HTML)$!colouredTurns:?html
+        & (|lst$(html,"all.bra",NEW,WYD,RAW))
+        & nestML$!html:?html
+        & (|lst$(html,"allNest.bra",NEW,WYD,RAW))
+        &   put
+          $ ( toML$(html.,(body.,!html))
+            , str$(!(its.root) "allGEHM.html")
+            , NEW
+            , BIN
+            )
+        &     mop
+            $ ( ( 
+                =   
+                  .   !arg:?n*(?l.?)
+                    & ( !l:<200&(,!l !n)
+                      | 
+                      )
+                )
+              . !feedbackLenghtsSorted
+              . (=+)
+              . (=a b)
+              )
+          : ?lens
+        & (|lst$(lens,lens,NEW,RAW,WYD))
+        & (its.sd)$!lens:(?stddev.?avg)
+        & out$(stddev !stddev avg !avg)
+        & !htmlpaths
+  )
+  ( new
+  = r feedback.|(its.doit)$(arg$|)
+  );
+
+r=
+  get'("feedback.bra",TXT)
+& rmv$(str$(feedback ".bak"))
+& ren$("feedback.bra".str$(feedback ".bak"))
+&   put
+  $ ( "{feedback.bra
+𝕌𝕋𝔽-𝟠
+
+Progress:
+(1) TextGrid data only:
+* Finding the lengths of uninterrupted speech.
+* Create HTML table with colour coding for speakers.
+* The shorter the lenght of uninterrupted speach, the further to the right. 
+* Each line contains one word: start time, end time and difference between start of current word
+  and end of previous word. Time unit: centiseconds (seconds if using fixed point notation).
+(2) Compile some statistics to show, for each Zoom recording, how many times we see short
+    interruptions (between 1 and 5 words) involving words such 
+         yeah, okay, yes, no, ok, sure
+    (with or without capitalisation).
+
+    As a first step, I have created a ordered word list that puts all declared feedback words among
+    the first 23 words in the list of a total of 3456 words. It is as follows:
+    (a)  Create two word lists
+           (1) a list with pairs (word, word frequency). Here, the word frequency is computed by
+               counting word occurrences in all zoom meetings.
+           (2) a similar list, but each occurrence of a word weighed by length of the unbroken
+               utterance it is part of. So if two people are talking at the same time, utterances
+               get broken up in short word sequences. The lengths of these short sequences constitute
+               the weighing factor, or rather, the inverse of the length. So the shorter the sequence
+               the higher the weight.
+    (b)  Sort the two lists according to the (weighed or not) frequencies, so the most prominent words
+         are near the top of the list.
+    (c)  Replace the (weighed or not) frequencies by cardinal numbers, starting from 1. Words with the
+         same (weighed or not) frequency get the same number. Otherwise, numbers are incremented by 1.
+    (d)  Sort the two lists alphabetically. The lists list all words in the same order.
+    (e)  Iterate over all words, creating a new list where the number from the weighted list is divided
+         by the number from the unweighted list. The more frequent a word is, the further down the list
+         it will be pushed, while the more prominent the word is in short unbroken utterances, the higher
+         up the list it will be pushed.
+
+    The first 'word' in the list is the empty string. Probably Whisper did hear a sound but could not
+    make out what it was. 
+    Here are the first 55 words:
+
+      yeah      thank     nice      youre     problem   my
+      okay      exactly   sure      but       abstracts change
+      yes       thanks    lets      remember  marianne  pilar
+      hmm       mhm       great     very      always    i
+      oh        mm        see       im        indeed    so
+      no        thats     patrizia  perhaps   send
+      bye       fine      theres    think     hello
+      right     sorry     its       important course
+      ok        good      everybody soon      will
+      well      wow       all       still     many
+                                              
+    
+    The contrast with the unweighted list is stark:
+
+      the       of        think     can       what      there   
+      i         know      its       then      at        they
+      to        it        this      okay      also      will
+      that      but       dont      would     with      well
+      and       in        mean      on        just      people
+      we        have      yes       about     very
+      you       is        because   was       or
+      so        right     not       do        im
+      yeah      be        thats     are       one
+      a         for       if        like      really
+
+    Of the latter list, 41 words are not present in the first list:
+
+      the       in        if        what      people
+      to        have      can       at
+      that      is        then      also
+      and       be        would     with
+      we        for       on        just
+      you       this      about     or
+      a         dont      was       one
+      of        mean      do        really
+      know      because   are       there
+      it        not       like      they
+}
+
+"
+    , "feedback.bra"
+    , NEW
+    , BIN
+    )
+& lst'(feedback,"feedback.bra",APP,BIN,WYD)
+& put'(\n,"feedback.bra",APP,BIN)
+& lst'(r,"feedback.bra",APP,BIN,WYD)
+& put$(str$("\nnew'" feedback ";\n"),"feedback.bra",APP,BIN)
+& OK;
+
+new'feedback;
