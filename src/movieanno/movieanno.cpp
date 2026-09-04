@@ -1,4 +1,25 @@
 /*
+MOVIEANNO - movie annotator
+
+Copyright (C) 2026  Center for Sprogteknologi, University of Copenhagen
+
+This file is part of MOVIEANNO.
+
+MOVIEANNO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+MOVIEANNO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with MOVIEANNO; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+/*
 Program optionally takes TextGrid data that looks like this
 
 
@@ -1052,6 +1073,11 @@ long dostuff(std::filesystem::path InputFolder, std::filesystem::path KineticFol
 
     // Open output video writer
     printf("OutputPath %s\n", (OutputPath).string().c_str());
+    if(std::filesystem::exists(OutputPath))
+        {
+        printf("OutputPath already exists. Skipping the rest.\n    [%s]\n", (OutputPath).string().c_str());
+        return 0;
+        }
     cv::VideoWriter writer((OutputPath).string().c_str(), fourcc, fps, cv::Size(frame_width, frame_height));
     if(!writer.isOpened())
         {
