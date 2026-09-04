@@ -110,25 +110,21 @@ doall=
           : ?command
         & out$("command: " !command)
         & out$"Calling movieanno"
-        & (   sys$!command
-            & ( !OS:Windows&
-              |       str
-                    $ ( "./addaudio.sh"
-                        " "
-                        !(its.root)
-                        !(its.inputroot)
-                        " "
-                        !(its.root)
-                        !(its.outputroot)
-                      )
-                  : ?command
-                & out$!command
-                & out$"Calling addaudio"
-                & sys$!command
-              | 
+        & sys$!command
+        &     str
+            $ ( (!OS:Windows&|src/addaudio/)
+                addaudio
+                " "
+                !(its.root)
+                !(its.inputroot)
+                " "
+                !(its.root)
+                !(its.outputroot)
               )
-          | 
-          )
+          : ?command
+        & out$!command
+        & out$"Calling addaudio"
+        & sys$!command
       | 
   )
   "By declaring doall local in 'new', global doall is not only protected. Its members cannot be called from other objects that are accessed from 'new' or nested calls. "
