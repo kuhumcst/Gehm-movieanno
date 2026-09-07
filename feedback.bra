@@ -82,25 +82,12 @@ feedback=
   (speech=)
   (posThreshold=15)
   (negThreshold=15)
-  ( meetings
-  =   "20210323_Praat_long.TextGrid"
-      "20210504_Praat_long.TextGrid"
-      "20210616_Praat_long.TextGrid"
-      "20211007_Praat_long.TextGrid"
-      "20211119_Praat_long.TextGrid"
-      "20220204_Praat_long.TextGrid"
-      "20220408_Praat_long.TextGrid"
-      "20220610_Praat_long.TextGrid"
-      "20220722_Praat_long.TextGrid"
-      "20220916_Praat_long.TextGrid"
-      "20221209_Praat_long.TextGrid"
-      "20230310_Praat_long.TextGrid"
-  )
-  (meetings="20210504_Praat_long.TextGrid")
+  (sessionID=)
   ( agreedFeedbackWords
   = yeah nice okay sure yes hmm mhm great oh mm no fine right ok good
   )
   (notAgreedFeedbackWords=hmm mhm mm right)
+  "EntrainedSegments are currently not used!"
   ( EntrainedSegments
   =   (20210323.25.12 30,13 00)
       (20210504.22.11 00,11 30)
@@ -115,6 +102,7 @@ feedback=
       (20221209.70.35 00,35 30)
       (20230310.16.8 00,8 30)
   )
+  "NonEntrainedSegments are currently not used!"
   ( NonEntrainedSegments
   =   (20210323.8.4 00,4 30)
       (20210323.42.21 00,21 30)
@@ -140,6 +128,40 @@ feedback=
       (20221209.9.4 30,5 00)
       (20230310.39.19 30,20 00)
       (20230310.27.13 30,14 00)
+  )
+  ( dir
+  =   
+    .     (   !OS:Windows
+            &   str
+              $ ( "dir /B "
+                  !(its.root)
+                  !(its.inputroot)
+                  !sep
+                  !(its.sessionID)
+                  !sep
+                  "*.TextGrid >TextGrids 2>nul"
+                )
+          |   str
+            $ ( "ls -d -1 "
+                !(its.root)
+                !(its.inputroot)
+                !sep
+                !(its.sessionID)
+                !sep
+                "*.TextGrid | xargs -n 1 basename >TextGrids 2>/dev/null "
+              )
+          )
+        : ?command
+      & out$(str$("command: " !command))
+      & sys$!command
+      & get$(TextGrids,STR):?TextGrids
+      &   vap
+        $ ( ( 
+            = .(@(!arg:?arg \r)|)&!arg
+            )
+          . !TextGrids
+          . \n
+          )
   )
   ( mkdir
   =   a
@@ -348,28 +370,14 @@ feedback=
             & whl'@(!sec:0 %?sec)
             & str$(60*!min+!sec)
         )
-      &     map
-          $ ( ( 
-              =   
-                .     !arg:(!date.?.?start,?end)
-                    & (seconds$!start,seconds$!end)
-                  | 
-              )
-            . !(its.EntrainedSegments)
-            )
-        : ?entrained
-      &     map
-          $ ( ( 
-              =   
-                .     !arg:(!date.?.?start,?end)
-                    & (seconds$!start,seconds$!end)
-                  | 
-              )
-            . !(its.NonEntrainedSegments)
-            )
-        : ?nonentrained
-      & @(!zoom:?session "_" ?)
-      & (     str$(!(its.root) !(its.inputroot) "/" !session "/" !zoom)
+      & (       str
+              $ ( !(its.root)
+                  !(its.inputroot)
+                  "/"
+                  !(its.sessionID)
+                  "/"
+                  !zoom
+                )
             : ?pth
           & out$(pth !pth)
           & get$(!pth,STR):?textgrid
@@ -739,27 +747,47 @@ feedback=
           & !FeedbackLatenciesStrict+!latencies:?FeedbackLatenciesStrict
           & (|lst$(FeedbackLatenciesStrict,FeedbackLatenciesStrict,NEW))
           & ( 
-            |     map
-                $ ( ( 
-                    =   start end
-                      .   !arg:(?start,?end)
-                        & 100*!start:?start
-                        & 100*!end:?end
-                        &   map
-                          $ ( ( 
-                              =   
-                                .     !arg:(?wlen.?latency.?diff.?a.?b.?)
-                                    & !a:~<!start
-                                    & !b:~>!end
-                                    & !arg
-                                  | 
-                              )
-                            . !K
-                            )
+            |       map
+                  $ ( ( 
+                      =   
+                        .     !arg:(!date.?.?start,?end)
+                            & (seconds$!start,seconds$!end)
+                          | 
+                      )
+                    . !(its.EntrainedSegments)
                     )
-                  . !entrained !nonentrained
-                  )
-              : ?K
+                : ?entrained
+              &     map
+                  $ ( ( 
+                      =   
+                        .     !arg:(!date.?.?start,?end)
+                            & (seconds$!start,seconds$!end)
+                          | 
+                      )
+                    . !(its.NonEntrainedSegments)
+                    )
+                : ?nonentrained
+              &     map
+                  $ ( ( 
+                      =   start end
+                        .   !arg:(?start,?end)
+                          & 100*!start:?start
+                          & 100*!end:?end
+                          &   map
+                            $ ( ( 
+                                =   
+                                  .     !arg:(?wlen.?latency.?diff.?a.?b.?)
+                                      & !a:~<!start
+                                      & !b:~>!end
+                                      & !arg
+                                    | 
+                                )
+                              . !K
+                              )
+                      )
+                    . !entrained !nonentrained
+                    )
+                : ?K
             )
           & Uitvoer$(!zoom.!K)
         | out$(str$("TextGrid file " !zoom " not found"))&(.)
@@ -1717,7 +1745,7 @@ feedback=
           )
   )
   ( doit
-  =     r
+  =     r feedback
       , "---" PROD Persons colouredTurns html interruption-by monologue short-remarks
       , speakover textgrids turn-giving turns wordstat wordstatNR wordstatWght wordstatWghtNR
       , worddurations
@@ -1727,13 +1755,30 @@ feedback=
         & turn-giving:?turn-giving
         & short-remarks:?short-remarks
         & monologue:?monologue
-        &   (!arg:~|(.!(its.meetings)))
+        &   !arg
           : ( ?Sep
             . ?(its.root)
             . ?(its.inputroot)
+            . ?(its.sessionID)
             . ?(its.speech)
-            . ?textgrids
+            . ?(its.agreedFeedbackWords)
             )
+        & (its.dir)$:?textgrids
+        & (     map
+              $ ( ( 
+                  =   
+                    .     out$(arg !arg)
+                        & @(!arg:? long ?)
+                        & !arg
+                      | 
+                  )
+                . !textgrids
+                )
+            : ~
+            : ?textgrids
+          | 
+          )
+        & !textgrids:~
         & 0:?Persons
         & 0:?FeedbackLatencies:?FeedbackLatenciesStrict
         & :?feedbackLenghts
@@ -1834,9 +1879,7 @@ feedback=
         & out$(stddev !stddev avg !avg)
         & !htmlpaths
   )
-  ( new
-  = r feedback.|(its.doit)$(arg$|)
-  );
+  (new=r feedback.);
 
 r=
   get'("feedback.bra",TXT)

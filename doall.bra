@@ -8,15 +8,38 @@ Call movieanno (binary executable) to add an VAJ and TextGriddata overlay to mov
 Call addaudio.sh to (a) move flags in the output movie, so videoplayers don't complain (b) add audio (found in FinalDataset in separate audio files.}
 
 doall=
+  "
+  This is an example value of 'root'. Value is overwritten, and depends also on OS. See 'new' function.
+  "
   (root="/home/bart/Gehm-movieanno/")
+  "
+  Modify inputroot, sessionID, keypoints, SeparatedSpeakersVideo to match folder structure of input.
+  "
   (inputroot=FinalDataset)
   (sessionID=20210504)
   (keypoints=OpenPoseKeypoints)
-  (windowSizes=9 9 9)
+  (OriginalVideo=OriginalVideo)
+  (SeparatedSpeakersVideo=SeparatedSpeakersVideo)
+  "
+  Modify tab, speech, derivatives, outputroot to match the names of subfolders containing intermediary results and output.
+   Each subfolder will be created directly in the root folder.
+  "
   (tab=keypoints)
   (speech=praat)
   (derivatives=vaj)
   (outputroot=overlay)
+  "
+  Modify windowSizes as wanted.
+   The first number is the number of movie frames used to estimate velocity, 
+   the second to estimate acceleration and the third to estimate jerk.
+  "
+  (windowSizes=9 9 9)
+  "
+  The list of feedbackWords can be modified.
+  "
+  ( feedbackWords
+  = yeah nice okay sure yes hmm mhm great oh mm no fine right ok good
+  )
   ( mkdir
   =   
     .   sys
@@ -48,19 +71,9 @@ doall=
             $ ( !sep
               . !(its.root)
               . !(its.inputroot)
+              . !(its.sessionID)
               . !(its.speech)
-              .   "20210323_Praat_long.TextGrid"
-                  "20210504_Praat_long.TextGrid"
-                  "20210616_Praat_long.TextGrid"
-                  "20211007_Praat_long.TextGrid"
-                  "20211119_Praat_long.TextGrid"
-                  "20220204_Praat_long.TextGrid"
-                  "20220408_Praat_long.TextGrid"
-                  "20220610_Praat_long.TextGrid"
-                  "20220722_Praat_long.TextGrid"
-                  "20220916_Praat_long.TextGrid"
-                  "20221209_Praat_long.TextGrid"
-                  "20230310_Praat_long.TextGrid"
+              . !(its.feedbackWords)
               )
           : ?zoompaths
         & get$"speakseries.bra"
@@ -98,6 +111,10 @@ doall=
                 !(its.root)
                 " -f"
                 !hyphenatedwindowSizes
+                " -i"
+                !(its.OriginalVideo)
+                " -j"
+                !(its.SeparatedSpeakersVideo)
                 " -k"
                 !(its.derivatives)
                 " -m"
@@ -106,11 +123,63 @@ doall=
                 !(its.outputroot)
                 " -s"
                 !(its.sessionID)
+                " -t"
+                !(its.keypoints)
               )
           : ?command
         & out$("command: " !command)
         & out$"Calling movieanno"
         & sys$!command
+        &   (   !OS:Windows
+              &   str
+                $ ( "dir /B "
+                    !(its.root)
+                    !(its.inputroot)
+                    !sep
+                    !(its.sessionID)
+                    !sep
+                    !(its.SeparatedSpeakersVideo)
+                    " >speakers 2>nul"
+                  )
+            |   str
+              $ ( "ls -d -1 "
+                  !(its.root)
+                  !(its.inputroot)
+                  !sep
+                  !(its.sessionID)
+                  !sep
+                  !(its.SeparatedSpeakersVideo)
+                  !sep
+                  "* | xargs -n 1 basename >TextGrids 2>/dev/null >speakers 2>/dev/null"
+                )
+            )
+          : ?dircom
+        & out$(dircom !dircom)
+        & sys$!dircom
+        & get$(speakers,STR):?speakers
+        &     vap
+            $ ( ( 
+                =   
+                  .   ( @(!arg:!(its.sessionID) "-" ?arg "." ?)
+                      | 
+                      )
+                    & !arg
+                )
+              . !speakers
+              . \n
+              )
+          : ?speakers
+        & out$(speakers !speakers)
+        &   map
+          $ ( ( 
+              =   Com
+                .   str$(!command " -p" !arg):?Com
+                  & out$("command: " !Com)
+                  & out$"Calling movieanno"
+                  & sys$!Com
+              )
+            . !speakers
+            )
         &     str
             $ ( (!OS:Windows&|src/addaudio/)
                 addaudio
@@ -131,8 +200,7 @@ doall=
   ( new
   =   doall
     .   ~
-      |   
-        &   ( @(!v:? Windows ?)&("\\".Windows.".\\")
+      |     ( @(!v:? Windows ?)&("\\".Windows.".\\")
             | ("/".Unix."/home/bart/Gehm-movieanno/")
             )
           : (?sep.?OS.?(its.root))

@@ -4,6 +4,7 @@
 Read yyyymmdd_Praat_long.TextGrid.html and output 'speaker \t feedback y/n \t start \t end \t word \n'}
 
 speakseries=
+  " 'html-input' is used to test this script. "
   (html-input="praat/html/20230310_Praat_long.TextGrid.html")
   ( doit
   =   

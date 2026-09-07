@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <assert.h>
 
 
-static char opts[] = "?@:a:d:f:k:m:o:s:" /* GNU: */ "wr";
+static char opts[] = "?@:a:d:f:i:j:k:m:o:p:s:t:" /* GNU: */ "wr";
 static char *** Ppoptions = NULL;
 static char ** Poptions = NULL;
 static int optionSets = 0;
@@ -46,11 +46,14 @@ optionStruct::optionStruct()
     arga = NULL;
     argd = NULL;
     argf = NULL;
+    argi = NULL;
+    argj = NULL;
     argk = NULL;
     argm = NULL; 
     argo = NULL;
     argp = NULL;
     args = NULL;
+    argt = NULL;
     }
 
 optionStruct::~optionStruct()
@@ -66,11 +69,14 @@ optionStruct::~optionStruct()
     delete[] arga;
     delete[] argd;
     delete[] argf;
+    delete[] argi;
+    delete[] argj;
     delete[] argk;
     delete[] argm;
     delete[] argo;
     delete[] argp;
     delete[] args;
+    delete[] argt;
     }
 
 OptReturnTp optionStruct::doSwitch(int c,char * locoptarg,char * progname)
@@ -88,11 +94,13 @@ OptReturnTp optionStruct::doSwitch(int c,char * locoptarg,char * progname)
             LOG1LINE("    -a  directory where audio annotation (in columnar form) is stored. E.g. Praat (input)\n"
                      "    -d  directory relative to which other directories are defined. Default: directory where the program is started from (./).\n"
                      "    -f  windows, numbers of frames for computing velocity, acceleration and jerk. Format #-#-#. E.g. 9-11-13 \n"
+                     "    -i  subdirectory where the original movie is found that shows all particpants (input)\n"
+                     "    -j  subdirectory where the original movies are found, one participant per movie (input)\n"
                      "    -k  directory where kinetic data (velocity, acceleration, jerk) is stored. (input)\n"
                      "    -m  directory where the original movies are found in a folder (input)\n"
-                     "    -s  session name, e.g. 202201120\n"
                      "    -o  output\n"
                      "    -p  participant identifier. Optional.\n"
+                     "    -s  session name, e.g. 202201120\n"
                      "===============================");
             return OptReturnTp::Leave;
         case 'a':
@@ -103,6 +111,12 @@ OptReturnTp optionStruct::doSwitch(int c,char * locoptarg,char * progname)
             break;
         case 'f':
             argf = dupl(locoptarg);
+            break;
+        case 'i':
+            argi = dupl(locoptarg);
+            break;
+        case 'j':
+            argj = dupl(locoptarg);
             break;
         case 'k':
                 argk = dupl(locoptarg);
@@ -118,6 +132,9 @@ OptReturnTp optionStruct::doSwitch(int c,char * locoptarg,char * progname)
             break;
         case 's':
             args = dupl(locoptarg);
+            break;
+        case 't':
+            argt = dupl(locoptarg);
             break;
 // GNU >>
         case 'r':

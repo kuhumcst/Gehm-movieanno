@@ -32,11 +32,14 @@ struct optionStruct
     const char* arga; // -a
     const char* argd; // -d
     const char* argf; // -f
+    const char* argi; // -i
+    const char* argj; // -j
     const char* argk; // -k
     const char* argm; // -m
     const char* argo; // -o
     const char* argp; // -o
     const char* args; // -s
+    const char* argt; // -t
 
     optionStruct();
     ~optionStruct();

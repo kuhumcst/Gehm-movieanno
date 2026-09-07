@@ -4,6 +4,10 @@
 Read all OpenPose json files and create single tab separated file for pose_keypoints_2d for single person}
 
 OpenPose2VAJ=
+  "
+  The values of root, inputroot, tab, derivatives, sessionID, keypoints, windowSizes are examples.
+  The actual values are passed as arguments to the doit function.
+  "
   (root=)
   (inputroot=FinalDataset)
   (tab=keypoints)
